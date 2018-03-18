@@ -59,6 +59,10 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 	// TODO: should be initialized only once, not with every forward() call
 	cudaMallocManaged(&Z.data, W.shape.y * A.shape.x * sizeof(float));
 
+	if (W.shape.x != A.shape.y) {
+		throw NNException("Weight matrix and input matrix don't match.");
+	}
+
 	dim3 block_size(256);
 	dim3 num_of_blocks((W.shape.y * W.shape.x + block_size.x - 1) / block_size.x);
 
@@ -68,6 +72,7 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
+	Z.shape = nn_utils::Shape(A.shape.x, W.shape.y);
 	return Z;
 }
 
