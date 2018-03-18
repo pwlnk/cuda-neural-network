@@ -28,8 +28,8 @@ __global__ void linear_layer_forward(float* A, float* W, float* Z,
 	}
 }
 
-LinearLayer::LinearLayer(std::string name, int x_dim, int y_dim) :
-	x_dim(x_dim), y_dim(y_dim)
+LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
+	W(W_shape), Z()
 {
 	this->name = name;
 	allocateWeightsMemory();
@@ -37,34 +37,34 @@ LinearLayer::LinearLayer(std::string name, int x_dim, int y_dim) :
 }
 
 void LinearLayer::allocateWeightsMemory() {
-	cudaError_t error = cudaMallocManaged(&W, x_dim * y_dim * sizeof(float));
-	if (error != cudaSuccess) {
-		std::cout << error << std::endl;
-		throw NNException("Cannot initialize layer weights.");
-	}
+	cudaMallocManaged(&W.data, W.shape.x * W.shape.y * W.shape.z * sizeof(float));
+	nn_utils::throwIfDeviceErrorsOccurred("Cannot initialize layer weights.");
 }
 
 void LinearLayer::initializeWeightsRandomly() {
-	for (int x = 0; x < x_dim; x++) {
-		for (int y = 0; y < y_dim; y++) {
-			W[y * x_dim + x] = (static_cast<float>(rand()) / RAND_MAX) * weights_init_threshold;
+	for (int x = 0; x < W.shape.x; x++) {
+		for (int y = 0; y < W.shape.y; y++) {
+			W.data[y * W.shape.x + x] = (static_cast<float>(rand()) / RAND_MAX) * weights_init_threshold;
 		}
 	}
 }
 
-LinearLayer::~LinearLayer() { }
+LinearLayer::~LinearLayer() {
+	cudaFree(W.data);
+	cudaFree(Z.data);
+}
 
-float* LinearLayer::forward(float* A, int A_x_dim, int A_y_dim) {
+nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 
 	// TODO: should be initialized only once, not with every forward() call
-	cudaMallocManaged(&Z, A_x_dim * A_y_dim * sizeof(float));
+	cudaMallocManaged(&Z.data, W.shape.y * A.shape.x * sizeof(float));
 
 	dim3 block_size(256);
-	dim3 num_of_blocks((y_dim * x_dim + block_size.x - 1) / block_size.x);
+	dim3 num_of_blocks((W.shape.y * W.shape.x + block_size.x - 1) / block_size.x);
 
-	linear_layer_forward<<<block_size, num_of_blocks>>>(A, W, Z,
-														A_x_dim, A_y_dim,
-														x_dim, y_dim);
+	linear_layer_forward<<<block_size, num_of_blocks>>>(A.data, W.data, Z.data,
+														A.shape.x, A.shape.y,
+														W.shape.x, W.shape.y);
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
@@ -72,13 +72,13 @@ float* LinearLayer::forward(float* A, int A_x_dim, int A_y_dim) {
 }
 
 int LinearLayer::getXDim() const {
-	return x_dim;
+	return W.shape.x;
 }
 
 int LinearLayer::getYDim() const {
-	return y_dim;
+	return W.shape.y;
 }
 
-const float* LinearLayer::getWeightsMatrix() const {
+const nn_utils::Tensor3D LinearLayer::getWeightsMatrix() const {
 	return W;
 }

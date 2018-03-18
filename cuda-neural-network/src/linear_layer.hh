@@ -5,28 +5,29 @@
 // for unit testing purposes only
 namespace {
 	class LinearLayerTest_ShouldPerformForwardProp_Test;
+	class NeuralNetworkTest_ShouldPerformForwardProp_Test;
 }
 
 class LinearLayer : public NNLayer {
 private:
 	const float weights_init_threshold = 0.01;
 
-	int x_dim, y_dim;
-	float* W;
-	float* Z;
+	nn_utils::Tensor3D W;
+	nn_utils::Tensor3D Z;
 
 	void allocateWeightsMemory();
 	void initializeWeightsRandomly();
 
 	// for unit testing purposes only
-	friend class ::LinearLayerTest_ShouldPerformForwardProp_Test;
+	friend class LinearLayerTest_ShouldPerformForwardProp_Test;
+	friend class NeuralNetworkTest_ShouldPerformForwardProp_Test;
 
 public:
-	LinearLayer(std::string name, int x_dim, int y_dim);
+	LinearLayer(std::string name, nn_utils::Shape W_shape);
 	~LinearLayer();
 
-	float* forward(float* A, int A_x_dim, int A_y_dim);
+	nn_utils::Tensor3D forward(nn_utils::Tensor3D A);
 	int getXDim() const;
 	int getYDim() const;
-	const float* getWeightsMatrix() const;
+	const nn_utils::Tensor3D getWeightsMatrix() const;
 };

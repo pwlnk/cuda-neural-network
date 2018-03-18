@@ -15,23 +15,29 @@ __global__ void relu_activation_forward(float* A, float* Z,
 	}
 }
 
-ReLUActivation::ReLUActivation(std::string name) {
+ReLUActivation::ReLUActivation(std::string name) :
+		Z()
+{
 	this->name = name;
 }
 
-ReLUActivation::~ReLUActivation() { }
+ReLUActivation::~ReLUActivation() {
+	Z.freeCudaMemory();
+}
 
-float* ReLUActivation::forward(float* A, int A_x_dim, int A_y_dim) {
-	// TODO: should be initialized only once, not with every forward() call
-	cudaMallocManaged(&Z, A_x_dim * A_y_dim * sizeof(float));
+nn_utils::Tensor3D ReLUActivation::forward(nn_utils::Tensor3D A) {
+
+	// TODO: should be allocated once, not every time forward is called
+	Z.shape = A.shape;
+	Z.allocateCudaMemory();
 
 	dim3 block_size(256);
-	dim3 num_of_blocks((A_y_dim * A_x_dim + block_size.x - 1) / block_size.x);
+	dim3 num_of_blocks((A.shape.y * A.shape.x + block_size.x - 1) / block_size.x);
 
-	relu_activation_forward<<<block_size, num_of_blocks>>>(A, Z,
-														   A_x_dim, A_y_dim);
+	relu_activation_forward<<<block_size, num_of_blocks>>>(A.data, Z.data,
+														   A.shape.x, A.shape.y);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform relu forward prop.");
+	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform ReLU forward prop.");
 
 	return Z;
 }

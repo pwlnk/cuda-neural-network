@@ -1,8 +1,10 @@
 #pragma once
 
+#include "nn_utils.hh"
+
 namespace testutils {
 
-	void initializeMatrixWithValue(float* M, int x_dim, int y_dim, float value);
-	void initializeMatrixRandomlyInRange(float* M, int x_dim, int y_dim, float min, float max);
+	void initializeTensorWithValue(nn_utils::Tensor3D M, float value);
+	void initializeTensorRandomlyInRange(nn_utils::Tensor3D M, float min, float max);
 
 }

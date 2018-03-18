@@ -4,11 +4,11 @@
 
 class ReLUActivation : public NNLayer {
 private:
-	float* Z;
+	nn_utils::Tensor3D Z;
 
 public:
 	ReLUActivation(std::string name);
 	~ReLUActivation();
 
-	float* forward(float* A, int A_x_dim, int A_y_dim);
+	nn_utils::Tensor3D forward(nn_utils::Tensor3D A);
 };
