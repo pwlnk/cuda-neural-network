@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "linear_layer_test.cc"
+#include "linear_layer_test.cu"
 
 int main(int argc, char **argv)
 {

@@ -7,7 +7,7 @@ void NeuralNetwork::addLayer(NNLayer* layer) {
 float* NeuralNetwork::forward(float* X) {
 
 	for (std::vector<NNLayer*>::iterator it = this->layers.begin(); it != this->layers.end(); it++) {
-		(*it)->forward(nullptr);
+		(*it)->forward(nullptr, 0, 0);
 	}
 
 	return nullptr;

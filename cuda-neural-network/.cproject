@@ -46,14 +46,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="com.nvidia.cuda.ide.on_path.configuration.debug.884352035.1832508547" name="/" resourcePath="src">
-						<toolChain id="com.nvidia.cuda.tools.toolchain.on_path.exe.debug.739993749" name="CUDA Toolkit on the path" superClass="com.nvidia.cuda.tools.toolchain.on_path.exe.debug" unusedChildren="">
-							<tool id="nvcc.compiler.base.1550970709" name="NVCC Compiler" superClass="nvcc.compiler.base.1708173991"/>
-							<tool id="nvcc.linker.base.349263987" name="NVCC Linker" superClass="nvcc.linker.base.309576379"/>
-							<tool id="nvcc.archiver.base.1675345528" name="NVCC Archiver" superClass="nvcc.archiver.base.791783563"/>
-							<tool id="com.nvidia.host.assembler.240709140" name="Host Assembler" superClass="com.nvidia.host.assembler.662447299"/>
-						</toolChain>
-					</folderInfo>
 					<sourceEntries>
 						<entry excluding="test/test_main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
