@@ -1,5 +1,6 @@
 #include <iostream>
 #include <time.h>
+#include <math.h>
 
 #include "test_utils.hh"
 
@@ -20,6 +21,10 @@ namespace testutils {
 				M.data[y * M.shape.x + x] = (static_cast<float>(rand()) / RAND_MAX) * (max - min) + min;
 			}
 		}
+	}
+
+	float sigmoid(float x) {
+		return exp(x) / (1 + exp(x));
 	}
 
 }
