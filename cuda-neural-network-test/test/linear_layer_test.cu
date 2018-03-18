@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "test_utils.hh"
 #include "linear_layer.hh"
 
 namespace {
@@ -35,7 +36,7 @@ namespace {
 	TEST_F(LinearLayerTest, ShouldHaveWeightsInitializedRandomlyWithNumbersLowerThan0p01) {
 		// given
 		// when
-		const float* weights = linear_layer.getWeightsMatrix();
+		const float* W = linear_layer.getWeightsMatrix();
 		int x_dim = linear_layer.getXDim();
 		int y_dim = linear_layer.getYDim();
 
@@ -43,18 +44,10 @@ namespace {
 		float prev_weight_val = -1.0;
 		for (int x = 0; x < x_dim; x++) {
 			for (int y = 0; y < y_dim; y++) {
-				ASSERT_GE(weights[y * x_dim + x], 0);
-				ASSERT_LE(weights[y * x_dim + x], 0.01);
-				ASSERT_NE(weights[y * x_dim + x], prev_weight_val);
-				prev_weight_val = weights[y * x_dim + x];
-			}
-		}
-	}
-
-	void initializeWeightsWithValue(float* weights, int x_dim, int y_dim, float value) {
-		for (int x = 0; x < x_dim; x++) {
-			for (int y = 0; y < y_dim; y++) {
-				weights[y * x_dim + x] = value;
+				ASSERT_GE(W[y * x_dim + x], 0);
+				ASSERT_LE(W[y * x_dim + x], 0.01);
+				ASSERT_NE(W[y * x_dim + x], prev_weight_val);
+				prev_weight_val = W[y * x_dim + x];
 			}
 		}
 	}
@@ -69,11 +62,11 @@ namespace {
 		int W_x_dim = linear_layer.getXDim();
 
 		cudaMallocManaged(&A, A_x_dim * A_y_dim * sizeof(float));
-		initializeWeightsWithValue(linear_layer.weights,
-								   linear_layer.getXDim(),
-								   linear_layer.getYDim(),
-								   2);
-		initializeWeightsWithValue(A, A_x_dim, A_y_dim, 3);
+		testutils::initializeMatrixWithValue( linear_layer.W,
+											  linear_layer.getXDim(),
+											  linear_layer.getYDim(),
+											  2);
+		testutils::initializeMatrixWithValue(A, A_x_dim, A_y_dim, 3);
 
 		// when
 		float* Z = linear_layer.forward(A, A_x_dim, A_y_dim);

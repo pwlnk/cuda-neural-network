@@ -12,7 +12,8 @@ private:
 	const float weights_init_threshold = 0.01;
 
 	int x_dim, y_dim;
-	float* weights;
+	float* W;
+	float* Z;
 
 	void allocateWeightsMemory();
 	void initializeWeightsRandomly();
