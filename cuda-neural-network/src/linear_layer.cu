@@ -18,7 +18,7 @@ __global__ void linear_layer_forward(float* A, float* W, float* Z,
 		int Z_x = 0;
 
 		int A_y = W_x;
-		int product_val = 0;
+		float product_val = 0;
 
 		for (int A_x = 0; A_x < A_x_dim; A_x++) {
 			Z_x = A_x;
