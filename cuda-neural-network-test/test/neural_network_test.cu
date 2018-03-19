@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 
 #include "gtest/gtest.h"
 #include "neural_network.hh"
@@ -11,10 +12,15 @@ namespace {
 	class NeuralNetworkTest : public ::testing::Test {
 	protected:
 		NeuralNetwork neural_network;
+
 		nn_utils::Tensor3D X;
+		nn_utils::Tensor3D predictions;
+		nn_utils::Tensor3D target;
 
 		virtual void TearDown() {
 			X.freeCudaMemory();
+			predictions.freeCudaMemory();
+			target.freeCudaMemory();
 		}
 	};
 
@@ -42,7 +48,7 @@ namespace {
 
 	TEST_F(NeuralNetworkTest, ShouldPerformForwardProp) {
 		// given
-		nn_utils::Tensor3D X(10, 20);
+		X.shape = nn_utils::Shape(10, 20);
 		X.allocateCudaMemory();
 
 		nn_utils::Shape output_shape(X.shape.x, 5);

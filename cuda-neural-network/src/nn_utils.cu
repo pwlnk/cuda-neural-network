@@ -2,6 +2,7 @@
 #include "nn_exception.hh"
 
 #include <math.h>
+#include <iostream>
 
 namespace nn_utils {
 
@@ -10,19 +11,6 @@ namespace nn_utils {
 		if (error != cudaSuccess) {
 			throw NNException(exception_message);
 		}
-	}
-
-	float binaryCrossEntropyLoss(Tensor3D predictions, Tensor3D target) {
-		if (predictions.shape.x != target.shape.x) {
-			throw NNException("Predictions and target shapes don't match.");
-		}
-
-		float cost = 0.0;
-		for (int i = 0; i < predictions.shape.x; i++) {
-			cost += target.data[i] * log(predictions.data[i]) + (1 - target.data[i]) * log(1 - predictions.data[i]);
-		}
-
-		return -cost / predictions.shape.x;
 	}
 
 	Shape::Shape(size_t x, size_t y, size_t z) :
@@ -45,6 +33,32 @@ namespace nn_utils {
 	void Tensor3D::freeCudaMemory() {
 		cudaFree(data);
 		data = nullptr;
+	}
+
+	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
+		if (predictions.shape.x != target.shape.x) {
+			throw NNException("Predictions and target shapes don't match.");
+		}
+
+		float cost = 0.0;
+		for (int i = 0; i < predictions.shape.x; i++) {
+			cost += target.data[i] * log(predictions.data[i]) + (1 - target.data[i]) * log(1 - predictions.data[i]);
+		}
+
+		return -cost / predictions.shape.x;
+	}
+
+	float dBinaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
+		if (predictions.shape.x != target.shape.x) {
+			throw NNException("Predictions and target shapes don't match.");
+		}
+
+		float d_cost = 0.0;
+		for (int i = 0; i < predictions.shape.x; i++) {
+			d_cost += - (predictions.data[i] - target.data[i]) / (static_cast<double>(1 - predictions.data[i]) * predictions.data[i]);
+		}
+
+		return d_cost / predictions.shape.x;
 	}
 
 }

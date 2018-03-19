@@ -50,8 +50,8 @@ void LinearLayer::initializeWeightsRandomly() {
 }
 
 LinearLayer::~LinearLayer() {
-	cudaFree(W.data);
-	cudaFree(Z.data);
+	W.freeCudaMemory();
+	Z.freeCudaMemory();
 }
 
 nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {

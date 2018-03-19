@@ -1,10 +1,12 @@
 #include "neural_network.hh"
+#include "nn_exception.hh"
+
+#include <iostream>
 
 NeuralNetwork::NeuralNetwork()
 { }
 
 NeuralNetwork::~NeuralNetwork() {
-	Y.freeCudaMemory();
 	for (std::vector<NNLayer*>::iterator it = this->layers.begin(); it != this->layers.end(); it++) {
 		delete *it;
 	}

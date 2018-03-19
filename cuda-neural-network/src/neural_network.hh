@@ -13,6 +13,8 @@ public:
 	~NeuralNetwork();
 
 	nn_utils::Tensor3D forward(nn_utils::Tensor3D X);
+	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);
+	float dBinaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);
 
 	void addLayer(NNLayer *layer);
 	std::vector<NNLayer*> getLayers() const;
