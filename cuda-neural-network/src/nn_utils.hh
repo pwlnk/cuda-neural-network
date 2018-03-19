@@ -21,4 +21,6 @@ namespace nn_utils {
 		void freeCudaMemory();
 	};
 
+	float binaryCrossEntropyLoss(Tensor3D predictions, Tensor3D target);
+
 }

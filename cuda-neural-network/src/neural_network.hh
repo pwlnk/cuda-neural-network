@@ -12,8 +12,9 @@ public:
 	NeuralNetwork();
 	~NeuralNetwork();
 
-	void addLayer(NNLayer *layer);
 	nn_utils::Tensor3D forward(nn_utils::Tensor3D X);
+
+	void addLayer(NNLayer *layer);
 	std::vector<NNLayer*> getLayers() const;
 
 };

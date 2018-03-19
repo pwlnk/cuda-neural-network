@@ -65,8 +65,8 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="com.nvidia.cuda.ide.on_path.configuration.debug.2036847719.382395761" name="sigmoid_activation_test.cu" rcbsApplicability="disable" resourcePath="test/sigmoid_activation_test.cu" toolsToInvoke="nvcc.compiler.base.1029319375.1743345789">
-						<tool id="nvcc.compiler.base.1029319375.1743345789" name="NVCC Compiler" superClass="nvcc.compiler.base.1029319375"/>
+					<fileInfo id="com.nvidia.cuda.ide.on_path.configuration.debug.2036847719.1502540862" name="nn_utils_test.cu" rcbsApplicability="disable" resourcePath="test/nn_utils_test.cu" toolsToInvoke="nvcc.compiler.base.1029319375.759924295">
+						<tool id="nvcc.compiler.base.1029319375.759924295" name="NVCC Compiler" superClass="nvcc.compiler.base.1029319375"/>
 					</fileInfo>
 					<folderInfo id="com.nvidia.cuda.ide.on_path.configuration.debug.2036847719.1746875044" name="/" resourcePath="googletest-lib">
 						<toolChain id="com.nvidia.cuda.tools.toolchain.on_path.exe.debug.932171058" name="CUDA Toolkit on the path" superClass="com.nvidia.cuda.tools.toolchain.on_path.exe.debug" unusedChildren="">
@@ -87,7 +87,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="test/sigmoid_activation_test.cu|test/neural_network_test.cu|test/relu_activation_test.cu|test/linear_layer_test.cu|test/linear_layer_test.cc|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="test/nn_utils_test.cu|test/sigmoid_activation_test.cu|test/neural_network_test.cu|test/relu_activation_test.cu|test/linear_layer_test.cu|test/linear_layer_test.cc|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry excluding="main.cu" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
@@ -143,11 +143,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="com.nvidia.cuda.ide.on_path.configuration.release.1571333384.1374496779" name="sigmoid_activation_test.cu" rcbsApplicability="disable" resourcePath="test/sigmoid_activation_test.cu" toolsToInvoke="nvcc.compiler.base.1911548288.1468948965">
-						<tool id="nvcc.compiler.base.1911548288.1468948965" name="NVCC Compiler" superClass="nvcc.compiler.base.1911548288"/>
+					<fileInfo id="com.nvidia.cuda.ide.on_path.configuration.release.1571333384.15943500" name="nn_utils_test.cu" rcbsApplicability="disable" resourcePath="test/nn_utils_test.cu" toolsToInvoke="nvcc.compiler.base.1911548288.1933643632">
+						<tool id="nvcc.compiler.base.1911548288.1933643632" name="NVCC Compiler" superClass="nvcc.compiler.base.1911548288"/>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="test/sigmoid_activation_test.cu|test/neural_network_test.cu|test/relu_activation_test.cu|test/linear_layer_test.cu|test/linear_layer_test.cc|googletest-lib" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="test/nn_utils_test.cu|test/sigmoid_activation_test.cu|test/neural_network_test.cu|test/relu_activation_test.cu|test/linear_layer_test.cu|test/linear_layer_test.cc|googletest-lib" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
