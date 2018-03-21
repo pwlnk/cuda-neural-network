@@ -49,11 +49,11 @@ namespace {
 		float expected_derivative = - (0.0001 - 1) / ((1 - 0.0001) * 0.0001);
 
 		// when
-		float d_cross_entropy_loss = nn_utils::dBinaryCrossEntropyCost(predictions, target);
+		nn_utils::Tensor3D d_cross_entropy_loss = nn_utils::dBinaryCrossEntropyCost(predictions, target);
 
 		// then
 		for (int i = 0; i < predictions.shape.x; i++) {
-			ASSERT_NEAR(d_cross_entropy_loss, expected_derivative, 0.00001);
+			ASSERT_NEAR(d_cross_entropy_loss.data[i], expected_derivative, 0.00001);
 		}
 	}
 

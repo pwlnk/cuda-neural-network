@@ -48,17 +48,21 @@ namespace nn_utils {
 		return -cost / predictions.shape.x;
 	}
 
-	float dBinaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
+	// TODO: move operation to CUDA
+	Tensor3D dBinaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
 		if (predictions.shape.x != target.shape.x) {
 			throw NNException("Predictions and target shapes don't match.");
 		}
 
-		float d_cost = 0.0;
+		Tensor3D dY;
+		dY.shape = predictions.shape;
+		dY.allocateCudaMemory();
+
 		for (int i = 0; i < predictions.shape.x; i++) {
-			d_cost += - (predictions.data[i] - target.data[i]) / (static_cast<double>(1 - predictions.data[i]) * predictions.data[i]);
+			dY.data[i] = - (predictions.data[i] - target.data[i]) / (static_cast<double>(1 - predictions.data[i]) * predictions.data[i]);
 		}
 
-		return d_cost / predictions.shape.x;
+		return dY;
 	}
 
 }
