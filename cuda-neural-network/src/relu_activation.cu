@@ -1,43 +1,70 @@
 #include "relu_activation.hh"
 #include "nn_utils.hh"
 
-__global__ void relu_activation_forward(float* A, float* Z,
-									    int A_x_dim, int A_y_dim) {
+__global__ void relu_activation_forward(float* Z, float* A,
+									    int Z_x_dim, int Z_y_dim) {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (index < A_x_dim * A_y_dim) {
-		if (A[index] > 0) {
-			Z[index] = A[index];
+	if (index < Z_x_dim * Z_y_dim) {
+		A[index] = fmaxf(Z[index], 0);
+	}
+}
+
+__global__ void relu_activation_backprop(float* Z, float* dA, float* dZ,
+											int Z_x_dim, int Z_y_dim) {
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (index < Z_x_dim * Z_y_dim) {
+		if (Z[index] > 0) {
+			dZ[index] = dA[index];
 		}
 		else {
-			Z[index] = 0;
+			dZ[index] = 0;
 		}
 	}
 }
 
 ReLUActivation::ReLUActivation(std::string name) :
-		Z()
+		A(), dZ()
 {
 	this->name = name;
 }
 
 ReLUActivation::~ReLUActivation() {
-	Z.freeCudaMemory();
+	A.freeCudaMemory();
+	dZ.freeCudaMemory();
 }
 
-nn_utils::Tensor3D ReLUActivation::forward(nn_utils::Tensor3D A) {
+nn_utils::Tensor3D ReLUActivation::forward(nn_utils::Tensor3D Z) {
+
+	this->Z = Z;
 
 	// TODO: should be allocated once, not every time forward is called
-	Z.shape = A.shape;
-	Z.allocateCudaMemory();
+	A.shape = Z.shape;
+	A.allocateCudaMemory();
 
 	dim3 block_size(256);
-	dim3 num_of_blocks((A.shape.y * A.shape.x + block_size.x - 1) / block_size.x);
+	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);
 
-	relu_activation_forward<<<block_size, num_of_blocks>>>(A.data, Z.data,
-														   A.shape.x, A.shape.y);
+	relu_activation_forward<<<block_size, num_of_blocks>>>(Z.data, A.data,
+														   Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform ReLU forward prop.");
 
-	return Z;
+	return A;
+}
+
+nn_utils::Tensor3D ReLUActivation::backprop(nn_utils::Tensor3D dA) {
+	// TODO: should be allocated once, not every time forward is called
+	dZ.shape = Z.shape;
+	dZ.allocateCudaMemory();
+
+	dim3 block_size(256);
+	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);
+	relu_activation_backprop<<<block_size, num_of_blocks>>>(Z.data, dA.data, dZ.data,
+															Z.shape.x, Z.shape.y);
+	cudaDeviceSynchronize();
+	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform relu backprop");
+
+	return dZ;
 }
