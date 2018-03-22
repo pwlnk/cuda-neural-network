@@ -72,8 +72,8 @@ namespace {
 		// given
 		float bias_val = 5;
 
-		A.shape.x = linear_layer.getYDim();
-		A.shape.y = 10;
+		A.shape.x = 10;
+		A.shape.y = linear_layer.getXDim();;
 		A.allocateCudaMemory();
 
 		testutils::initializeTensorWithValue(linear_layer.W, 2);
@@ -85,9 +85,42 @@ namespace {
 
 		// then
 		ASSERT_NE(Z.data, nullptr);
+		ASSERT_EQ(Z.shape.x, 10);
+		ASSERT_EQ(Z.shape.y, linear_layer.getYDim());
 		for (int Z_x = 0; Z_x < Z.shape.x; Z_x++) {
 			for (int Z_y = 0; Z_y < Z.shape.y; Z_y++) {
 				ASSERT_EQ(Z.data[Z_y * Z.shape.x + Z_x], 2 * 3 * linear_layer.getXDim() + bias_val);
+			}
+		}
+	}
+
+	TEST_F(LinearLayerTest, ShouldPerformBackprop) {
+		// given
+		float bias_val = 5;
+
+		A.shape.x = 10;
+		A.shape.y = linear_layer.getXDim();;
+		A.allocateCudaMemory();
+
+		nn_utils::Tensor3D dZ(10, 20);
+		dZ.allocateCudaMemory();
+		testutils::initializeTensorWithValue(dZ, 2);
+
+		testutils::initializeTensorWithValue(linear_layer.W, 2);
+		testutils::initializeTensorWithValue(linear_layer.b, bias_val);
+		testutils::initializeTensorWithValue(A, 3);
+
+		// when
+		nn_utils::Tensor3D Z = linear_layer.forward(A);
+		nn_utils::Tensor3D dA = linear_layer.backprop(dZ);
+
+		// then
+		ASSERT_NE(dA.data, nullptr);
+		ASSERT_EQ(dA.shape.x, A.shape.x);
+		ASSERT_EQ(dA.shape.y, A.shape.y);
+		for (int dA_x = 0; dA_x < dA.shape.x; dA_x++) {
+			for (int dA_y = 0; dA_y < dA.shape.y; dA_y++) {
+				ASSERT_EQ(dA.data[dA_y * dA.shape.x + dA_x], 80);
 			}
 		}
 	}

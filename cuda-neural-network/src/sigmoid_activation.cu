@@ -54,7 +54,7 @@ nn_utils::Tensor3D SigmoidActivation::forward(nn_utils::Tensor3D Z) {
 }
 
 nn_utils::Tensor3D SigmoidActivation::backprop(nn_utils::Tensor3D dA) {
-	// TODO: should be allocated once, not every time forward is called
+	// TODO: should be allocated once, not every time backprop is called
 	dZ.shape = Z.shape;
 	dZ.allocateCudaMemory();
 

@@ -5,8 +5,8 @@
 #include "nn_utils.hh"
 
 __global__ void weightedSum(float* A, float* W, float* Z,
-									 int A_x_dim, int A_y_dim,
-									 int W_x_dim, int W_y_dim) {
+							 int A_x_dim, int A_y_dim,
+							 int W_x_dim, int W_y_dim) {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index < W_x_dim * W_y_dim) {
@@ -38,8 +38,33 @@ __global__ void addBias(float* Z, float* b, int Z_x_dim, int Z_y_dim) {
 	}
 }
 
+__global__ void linearLayerBackprop(float* W, float* dZ, float *dA,
+									int W_x_dim, int W_y_dim,
+									int dZ_x_dim, int dZ_y_dim) {
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (index < W_x_dim * W_y_dim) {
+		// W is treated as it would be transposed
+		int W_y = index % W_x_dim;
+		int W_x = index / W_x_dim;
+
+		int dA_x_dim = dZ_x_dim;
+		int dA_y = W_y;
+		int dA_x = 0;
+
+		int dZ_y = W_x;
+		float product_val = 0;
+
+		for (int dZ_x = 0; dZ_x < dZ_x_dim; dZ_x++) {
+			dA_x = dZ_x;
+			product_val = W[index] * dZ[dZ_y * dZ_x_dim + dZ_x];
+			atomicAdd(&dA[dA_y * dA_x_dim + dA_x], product_val);
+		}
+	}
+}
+
 LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
-	W(W_shape), Z(), b(W_shape.y, 1)
+	W(W_shape), Z(), b(W_shape.y, 1), dA()
 {
 	this->name = name;
 	b.allocateCudaMemory();
@@ -72,6 +97,8 @@ LinearLayer::~LinearLayer() {
 
 nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 
+	this->A = A;
+
 	// TODO: should be initialized only once, not with every forward() call
 	cudaMallocManaged(&Z.data, W.shape.y * A.shape.x * sizeof(float));
 
@@ -79,8 +106,8 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 		throw NNException("Weight matrix and input matrix don't match.");
 	}
 
-	cudaMemset(Z.data, 0, Z.shape.x * Z.shape.y * sizeof(float));
 	Z.shape = nn_utils::Shape(A.shape.x, W.shape.y);
+	cudaMemset(Z.data, 0, Z.shape.x * Z.shape.y * sizeof(float));
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((W.shape.y * W.shape.x + block_size.x - 1) / block_size.x);
@@ -97,6 +124,24 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
 	return Z;
+}
+
+nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ) {
+	// TODO: should be allocated once, not every time backprop is called
+	dA.shape = A.shape;
+	dA.allocateCudaMemory();
+	cudaMemset(dA.data, 0, dA.shape.x * dA.shape.y * sizeof(float));
+
+	// compute dA
+	dim3 block_size(256);
+	dim3 num_of_blocks((W.shape.y * W.shape.x + block_size.x - 1) / block_size.x);
+	linearLayerBackprop<<<block_size, num_of_blocks>>>(W.data, dZ.data, dA.data,
+														W.shape.x, W.shape.y,
+														dZ.shape.x, dZ.shape.y);
+	cudaDeviceSynchronize();
+	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+
+	return dA;
 }
 
 int LinearLayer::getXDim() const {
