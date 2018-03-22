@@ -57,11 +57,14 @@ namespace {
 
 	TEST_F(LinearLayerTest, ShouldPerformForwardProp) {
 		// given
+		float bias_val = 5;
+
 		A.shape.x = linear_layer.getYDim();
 		A.shape.y = 10;
 		A.allocateCudaMemory();
 
 		testutils::initializeTensorWithValue(linear_layer.W, 2);
+		testutils::initializeTensorWithValue(linear_layer.b, bias_val);
 		testutils::initializeTensorWithValue(A, 3);
 
 		// when
@@ -71,7 +74,7 @@ namespace {
 		ASSERT_NE(Z.data, nullptr);
 		for (int Z_x = 0; Z_x < Z.shape.x; Z_x++) {
 			for (int Z_y = 0; Z_y < Z.shape.y; Z_y++) {
-				ASSERT_EQ(Z.data[Z_y * Z.shape.x + Z_x], 2 * 3 * linear_layer.getXDim());
+				ASSERT_EQ(Z.data[Z_y * Z.shape.x + Z_x], 2 * 3 * linear_layer.getXDim() + bias_val);
 			}
 		}
 	}

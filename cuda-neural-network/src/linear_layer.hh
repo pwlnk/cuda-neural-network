@@ -13,9 +13,10 @@ private:
 	const float weights_init_threshold = 0.01;
 
 	nn_utils::Tensor3D W;
+	nn_utils::Tensor3D b;
 	nn_utils::Tensor3D Z;
 
-	void allocateWeightsMemory();
+	void initializeBiasWithZeros();
 	void initializeWeightsRandomly();
 
 	// for unit testing purposes only
