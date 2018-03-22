@@ -38,6 +38,19 @@ namespace {
 		EXPECT_EQ(y_dim, 20);
 	}
 
+	TEST_F(LinearLayerTest, ShouldHaveInitializedBiasVectorWithZeros) {
+		// given
+		// when
+		const nn_utils::Tensor3D b = linear_layer.getBiasVector();
+
+		// then
+		ASSERT_EQ(b.shape.x, linear_layer.getYDim());
+		ASSERT_EQ(b.shape.y, 1);
+		for (int x = 0; x < b.shape.x; x++) {
+			ASSERT_EQ(b.data[x], 0);
+		}
+	}
+
 	TEST_F(LinearLayerTest, ShouldHaveWeightsInitializedRandomlyWithNumbersLowerThan0p01) {
 		// given
 		// when

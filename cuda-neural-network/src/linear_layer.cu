@@ -110,3 +110,7 @@ int LinearLayer::getYDim() const {
 const nn_utils::Tensor3D LinearLayer::getWeightsMatrix() const {
 	return W;
 }
+
+const nn_utils::Tensor3D LinearLayer::getBiasVector() const {
+	return b;
+}
