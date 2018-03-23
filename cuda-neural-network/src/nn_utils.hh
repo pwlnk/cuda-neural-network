@@ -13,17 +13,19 @@ namespace nn_utils {
 	struct Tensor3D {
 		Shape shape;
 		float* data;
+		bool memory_allocated;
 
 		Tensor3D(size_t x_dim = 1, size_t y_dim = 1, size_t z_dim = 1);
 		Tensor3D(Shape shape);
 
 		void allocateCudaMemory();
+		void allocateIfNotAllocated(nn_utils::Shape shape);
 		void freeCudaMemory();
 
 		float& operator[](const int index);
 		const float& operator[](const int index) const;
 	};
 
-	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);
-	Tensor3D dBinaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);
+	float binaryCrossEntropyCost(Tensor3D predictions, Tensor3D target);
+	Tensor3D dBinaryCrossEntropyCost(Tensor3D predictions, Tensor3D target, Tensor3D dY);
 }

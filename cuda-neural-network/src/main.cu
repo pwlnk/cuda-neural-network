@@ -23,22 +23,21 @@ int main() {
 	}
 
 	NeuralNetwork nn;
-	nn.addLayer(new LinearLayer("linear_1", nn_utils::Shape(1, 25)));
+	nn.addLayer(new LinearLayer("linear_1", nn_utils::Shape(1, 8)));
 	nn.addLayer(new ReLUActivation("relu_1"));
-	nn.addLayer(new LinearLayer("linear_2", nn_utils::Shape(25, 8)));
-	nn.addLayer(new ReLUActivation("relu_2"));
-	nn.addLayer(new LinearLayer("linear_3", nn_utils::Shape(8, 1)));
+	nn.addLayer(new LinearLayer("linear_2", nn_utils::Shape(8, 1)));
 	nn.addLayer(new SigmoidActivation("sigmoid_output"));
 
 	nn_utils::Tensor3D Y;
 
 	for (int i = 0; i < 1000; i++) {
 		Y = nn.forward(X);
-		std::cout << "Prediction: " << Y.data[1]
-							  << ", Target: " << target.data[1]
-							  << ", Cost: " << nn_utils::binaryCrossEntropyCost(Y, target) << std::endl;
 		nn.backprop(Y, target);
 	}
+
+	std::cout << "Prediction: " << Y.data[1]
+								  << ", Target: " << target.data[1]
+								  << ", Cost: " << nn_utils::binaryCrossEntropyCost(Y, target) << std::endl;
 
 	return 0;
 }

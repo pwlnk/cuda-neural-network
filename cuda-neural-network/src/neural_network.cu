@@ -11,6 +11,8 @@ NeuralNetwork::~NeuralNetwork() {
 	for (std::vector<NNLayer*>::iterator it = this->layers.begin(); it != this->layers.end(); it++) {
 		delete *it;
 	}
+
+	dY.freeCudaMemory();
 }
 
 void NeuralNetwork::addLayer(NNLayer* layer) {
@@ -30,7 +32,7 @@ nn_utils::Tensor3D NeuralNetwork::forward(nn_utils::Tensor3D X) {
 
 void NeuralNetwork::backprop(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
 
-	nn_utils::Tensor3D err = nn_utils::dBinaryCrossEntropyCost(predictions, target);
+	nn_utils::Tensor3D err = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
 
 	for (std::vector<NNLayer*>::reverse_iterator it = this->layers.rbegin(); it != this->layers.rend(); it++) {
 		err = (*it)->backprop(err, 0.01);

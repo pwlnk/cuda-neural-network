@@ -37,10 +37,7 @@ SigmoidActivation::~SigmoidActivation() {
 nn_utils::Tensor3D SigmoidActivation::forward(nn_utils::Tensor3D Z) {
 
 	this->Z = Z;
-
-	// TODO: should be allocated once, not every time forward is called
-	A.shape = Z.shape;
-	A.allocateCudaMemory();
+	A.allocateIfNotAllocated(Z.shape);
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);
@@ -54,9 +51,8 @@ nn_utils::Tensor3D SigmoidActivation::forward(nn_utils::Tensor3D Z) {
 }
 
 nn_utils::Tensor3D SigmoidActivation::backprop(nn_utils::Tensor3D dA, float learning_rate) {
-	// TODO: should be allocated once, not every time backprop is called
-	dZ.shape = Z.shape;
-	dZ.allocateCudaMemory();
+
+	dZ.allocateIfNotAllocated(Z.shape);
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);

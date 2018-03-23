@@ -6,7 +6,9 @@
 class NeuralNetwork {
 private:
 	std::vector<NNLayer*> layers;
+
 	nn_utils::Tensor3D Y;
+	nn_utils::Tensor3D dY;
 
 public:
 	NeuralNetwork();
