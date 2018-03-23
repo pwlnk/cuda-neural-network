@@ -7,6 +7,7 @@ namespace {
 	class LinearLayerTest_ShouldPerformForwardProp_Test;
 	class NeuralNetworkTest_ShouldPerformForwardProp_Test;
 	class LinearLayerTest_ShouldPerformBackprop_Test;
+	class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
 }
 
 class LinearLayer : public NNLayer {
@@ -27,13 +28,14 @@ private:
 	friend class LinearLayerTest_ShouldPerformForwardProp_Test;
 	friend class NeuralNetworkTest_ShouldPerformForwardProp_Test;
 	friend class LinearLayerTest_ShouldPerformBackprop_Test;
+	friend class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
 
 public:
 	LinearLayer(std::string name, nn_utils::Shape W_shape);
 	~LinearLayer();
 
 	nn_utils::Tensor3D forward(nn_utils::Tensor3D A);
-	nn_utils::Tensor3D backprop(nn_utils::Tensor3D dZ);
+	nn_utils::Tensor3D backprop(nn_utils::Tensor3D dZ, float learning_rate = 0.01);
 
 	int getXDim() const;
 	int getYDim() const;

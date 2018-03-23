@@ -125,4 +125,34 @@ namespace {
 		}
 	}
 
+	TEST_F(LinearLayerTest, ShouldUptadeItsBiasDuringBackprop) {
+		// given
+		float bias_val = 5;
+		float learning_rate = 0.1;
+		float updated_bias_val = bias_val - learning_rate * ((2 * 10) / 10);
+
+		A.shape.x = 10;
+		A.shape.y = linear_layer.getXDim();;
+		A.allocateCudaMemory();
+
+		nn_utils::Tensor3D dZ(10, 20);
+		dZ.allocateCudaMemory();
+		testutils::initializeTensorWithValue(dZ, 2);
+
+		testutils::initializeTensorWithValue(linear_layer.W, 2);
+		testutils::initializeTensorWithValue(linear_layer.b, bias_val);
+		testutils::initializeTensorWithValue(A, 3);
+
+		// when
+		nn_utils::Tensor3D Z = linear_layer.forward(A);
+		nn_utils::Tensor3D dA = linear_layer.backprop(dZ, learning_rate);
+		nn_utils::Tensor3D b = linear_layer.b;
+
+		// then
+		ASSERT_NE(b.data, nullptr);
+		for (int b_x = 0; b_x < b.shape.x; b_x++) {
+			ASSERT_EQ(b.data[b_x], updated_bias_val);
+		}
+	}
+
 }

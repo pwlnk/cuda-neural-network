@@ -63,6 +63,19 @@ __global__ void linearLayerBackprop(float* W, float* dZ, float *dA,
 	}
 }
 
+__global__ void biasGDC(float* dZ, float* b,
+						int dZ_x_dim, int dZ_y_dim,
+						int b_x_dim,
+						float learning_rate) {
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (index < dZ_x_dim * dZ_y_dim) {
+		int dZ_x = index % dZ_x_dim;
+		int dZ_y = index / dZ_x_dim;
+		atomicAdd(&b[dZ_y], - learning_rate * (dZ[dZ_y * dZ_x_dim + dZ_x] / dZ_x_dim));
+	}
+}
+
 LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
 	W(W_shape), Z(), b(W_shape.y, 1), dA()
 {
@@ -126,7 +139,7 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 	return Z;
 }
 
-nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ) {
+nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ, float learning_rate) {
 	// TODO: should be allocated once, not every time backprop is called
 	dA.shape = A.shape;
 	dA.allocateCudaMemory();
@@ -138,6 +151,15 @@ nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ) {
 	linearLayerBackprop<<<block_size, num_of_blocks>>>(W.data, dZ.data, dA.data,
 														W.shape.x, W.shape.y,
 														dZ.shape.x, dZ.shape.y);
+	cudaDeviceSynchronize();
+	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+
+	// compute db and do GDC
+	block_size.x = 256;
+	num_of_blocks.x = (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x;
+	biasGDC<<<block_size, num_of_blocks>>>(dZ.data, b.data,
+										   dZ.shape.x, dZ.shape.y,
+										   b.shape.x, learning_rate);
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
