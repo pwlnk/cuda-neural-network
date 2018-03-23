@@ -67,7 +67,7 @@ namespace nn_utils {
 		dY.allocateCudaMemory();
 
 		for (int i = 0; i < predictions.shape.x; i++) {
-			dY.data[i] = - (predictions.data[i] - target.data[i]) / (static_cast<double>(1 - predictions.data[i]) * predictions.data[i]);
+			dY.data[i] =  (predictions.data[i] - target.data[i]) / (static_cast<double>(1 - predictions.data[i]) * predictions.data[i]);
 		}
 
 		return dY;
