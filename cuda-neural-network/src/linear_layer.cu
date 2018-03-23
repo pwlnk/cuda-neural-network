@@ -76,6 +76,28 @@ __global__ void biasGDC(float* dZ, float* b,
 	}
 }
 
+__global__ void weightsGDC(float* A, float* dZ, float* W,
+						   int A_x_dim, int A_y_dim,
+						   int dZ_x_dim, int dZ_y_dim,
+						   float learning_rate) {
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (index < dZ_x_dim * dZ_y_dim) {
+		int dZ_x = index % dZ_x_dim;
+		int dZ_y = index / dZ_x_dim;
+
+		int A_x = dZ_x; // A is treated as it would be transposed
+		int W_y = dZ_y;
+		int W_x_dim = A_y_dim;
+
+		for (int A_y = 0; A_y < A_y_dim; A_y++) {
+			int W_x = A_y;
+			float product_val = dZ[dZ_y * dZ_x_dim + dZ_x] * A[A_y * A_x_dim + A_x];
+			atomicAdd(&W[W_y * W_x_dim + W_x], - learning_rate * (product_val / A_x_dim));
+		}
+	}
+}
+
 LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
 	W(W_shape), Z(), b(W_shape.y, 1), dA()
 {
@@ -161,7 +183,17 @@ nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ, float learning_r
 										   dZ.shape.x, dZ.shape.y,
 										   b.shape.x, learning_rate);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform bias GDC.");
+
+	// compute dW and do GDC
+	block_size.x = 256;
+	num_of_blocks.x = (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x;
+	weightsGDC<<<block_size, num_of_blocks>>>(A.data, dZ.data, W.data,
+											  A.shape.x, A.shape.y,
+											  dZ.shape.x, dZ.shape.y,
+											  learning_rate);
+	cudaDeviceSynchronize();
+	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform weights GDC.");
 
 	return dA;
 }

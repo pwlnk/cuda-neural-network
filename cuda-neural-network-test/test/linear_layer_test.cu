@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "gtest/gtest.h"
 #include "test_utils.hh"
 #include "linear_layer.hh"
@@ -151,7 +153,39 @@ namespace {
 		// then
 		ASSERT_NE(b.data, nullptr);
 		for (int b_x = 0; b_x < b.shape.x; b_x++) {
-			ASSERT_EQ(b.data[b_x], updated_bias_val);
+			ASSERT_NEAR(b.data[b_x], updated_bias_val, 0.0001);
+		}
+	}
+
+	TEST_F(LinearLayerTest, ShouldUptadeItsWeightsDuringBackprop) {
+		// given
+		float bias_val = 5;
+		float learning_rate = 0.1;
+		float updated_weights_val = 2 - learning_rate * ((2 * 3 * 10) / 10);
+
+		A.shape.x = 10;
+		A.shape.y = linear_layer.getXDim();;
+		A.allocateCudaMemory();
+
+		nn_utils::Tensor3D dZ(10, 20);
+		dZ.allocateCudaMemory();
+		testutils::initializeTensorWithValue(dZ, 2);
+
+		testutils::initializeTensorWithValue(linear_layer.W, 2);
+		testutils::initializeTensorWithValue(linear_layer.b, bias_val);
+		testutils::initializeTensorWithValue(A, 3);
+
+		// when
+		nn_utils::Tensor3D Z = linear_layer.forward(A);
+		nn_utils::Tensor3D dA = linear_layer.backprop(dZ, learning_rate);
+		nn_utils::Tensor3D W = linear_layer.W;
+
+		// then
+		ASSERT_NE(W.data, nullptr);
+		for (int W_x = 0; W_x < W.shape.x; W_x++) {
+			for (int W_y = 0; W_y < W.shape.y; W_y++) {
+				ASSERT_NEAR(W.data[W_y * W.shape.x + W_x], updated_weights_val, 0.0001);
+			}
 		}
 	}
 

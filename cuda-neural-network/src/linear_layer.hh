@@ -8,6 +8,7 @@ namespace {
 	class NeuralNetworkTest_ShouldPerformForwardProp_Test;
 	class LinearLayerTest_ShouldPerformBackprop_Test;
 	class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
+	class LinearLayerTest_ShouldUptadeItsWeightsDuringBackprop_Test;
 }
 
 class LinearLayer : public NNLayer {
@@ -29,6 +30,7 @@ private:
 	friend class NeuralNetworkTest_ShouldPerformForwardProp_Test;
 	friend class LinearLayerTest_ShouldPerformBackprop_Test;
 	friend class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
+	friend class LinearLayerTest_ShouldUptadeItsWeightsDuringBackprop_Test;
 
 public:
 	LinearLayer(std::string name, nn_utils::Shape W_shape);
