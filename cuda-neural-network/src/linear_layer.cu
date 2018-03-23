@@ -99,7 +99,7 @@ __global__ void weightsGDC(float* A, float* dZ, float* W,
 }
 
 LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
-	W(W_shape), Z(), b(W_shape.y, 1), dA()
+	W(W_shape), b(W_shape.y, 1)
 {
 	this->name = name;
 	b.allocateCudaMemory();

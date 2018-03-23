@@ -14,5 +14,5 @@ public:
 	~ReLUActivation();
 
 	nn_utils::Tensor3D forward(nn_utils::Tensor3D Z);
-	nn_utils::Tensor3D backprop(nn_utils::Tensor3D dA);
+	nn_utils::Tensor3D backprop(nn_utils::Tensor3D dA, float learning_rate = 0.01);
 };

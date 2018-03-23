@@ -19,6 +19,9 @@ namespace nn_utils {
 
 		void allocateCudaMemory();
 		void freeCudaMemory();
+
+		float& operator[](const int index);
+		const float& operator[](const int index) const;
 	};
 
 	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);

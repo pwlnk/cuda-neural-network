@@ -4,9 +4,9 @@
 
 // for unit testing purposes only
 namespace {
-	class LinearLayerTest_ShouldPerformForwardProp_Test;
+	class LinearLayerTest_ShouldReturnOutputAfterForwardProp_Test;
 	class NeuralNetworkTest_ShouldPerformForwardProp_Test;
-	class LinearLayerTest_ShouldPerformBackprop_Test;
+	class LinearLayerTest_ShouldReturnDerivativeAfterBackprop_Test;
 	class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
 	class LinearLayerTest_ShouldUptadeItsWeightsDuringBackprop_Test;
 }
@@ -26,9 +26,9 @@ private:
 	void initializeWeightsRandomly();
 
 	// for unit testing purposes only
-	friend class LinearLayerTest_ShouldPerformForwardProp_Test;
+	friend class LinearLayerTest_ShouldReturnOutputAfterForwardProp_Test;
 	friend class NeuralNetworkTest_ShouldPerformForwardProp_Test;
-	friend class LinearLayerTest_ShouldPerformBackprop_Test;
+	friend class LinearLayerTest_ShouldReturnDerivativeAfterBackprop_Test;
 	friend class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
 	friend class LinearLayerTest_ShouldUptadeItsWeightsDuringBackprop_Test;
 

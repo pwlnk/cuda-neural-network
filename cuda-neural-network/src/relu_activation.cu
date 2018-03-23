@@ -54,7 +54,7 @@ nn_utils::Tensor3D ReLUActivation::forward(nn_utils::Tensor3D Z) {
 	return A;
 }
 
-nn_utils::Tensor3D ReLUActivation::backprop(nn_utils::Tensor3D dA) {
+nn_utils::Tensor3D ReLUActivation::backprop(nn_utils::Tensor3D dA, float learning_rate) {
 	// TODO: should be allocated once, not every time forward is called
 	dZ.shape = Z.shape;
 	dZ.allocateCudaMemory();

@@ -35,6 +35,14 @@ namespace nn_utils {
 		data = nullptr;
 	}
 
+	float& Tensor3D::operator[](const int index) {
+		return data[index];
+	}
+
+	const float& Tensor3D::operator[](const int index) const {
+		return data[index];
+	}
+
 	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
 		if (predictions.shape.x != target.shape.x) {
 			throw NNException("Predictions and target shapes don't match.");

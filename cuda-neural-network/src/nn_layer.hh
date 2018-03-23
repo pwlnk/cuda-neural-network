@@ -11,6 +11,8 @@ public:
 	virtual ~NNLayer() = 0;
 
 	virtual nn_utils::Tensor3D forward(nn_utils::Tensor3D A) = 0;
+	virtual nn_utils::Tensor3D backprop(nn_utils::Tensor3D dZ, float learning_rate) = 0;
+
 	std::string getName() { return this->name; };
 
 };
