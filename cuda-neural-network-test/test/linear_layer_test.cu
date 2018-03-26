@@ -21,12 +21,15 @@ namespace {
 			linear_layer("some_linear_layer", nn_utils::Shape(2, 4))
 		{
 			A.allocateCudaMemory();
+			A.allocateHostMemory();
+
 			dZ.allocateCudaMemory();
+			dZ.allocateHostMemory();
 		}
 
 		virtual void TearDown() {
-			cudaFree(A.data);
-			cudaFree(dZ.data);
+			A.freeCudaAndHostMemory();
+			dZ.freeCudaAndHostMemory();
 		}
 	};
 
@@ -53,7 +56,10 @@ namespace {
 	TEST_F(LinearLayerTest, ShouldHaveInitializedBiasVectorWithZeros) {
 		// given
 		// when
-		const nn_utils::Tensor3D b = linear_layer.getBiasVector();
+		nn_utils::Tensor3D b = linear_layer.getBiasVector();
+
+		b.allocateHostMemory();
+		b.copyDeviceToHost();
 
 		// then
 		ASSERT_EQ(b.shape.x, W_shape.y);
@@ -66,7 +72,10 @@ namespace {
 	TEST_F(LinearLayerTest, ShouldHaveWeightsInitializedRandomlyWithNumbersLowerThan0p01) {
 		// given
 		// when
-		const nn_utils::Tensor3D W = linear_layer.getWeightsMatrix();
+		nn_utils::Tensor3D W = linear_layer.getWeightsMatrix();
+
+		W.allocateHostMemory();
+		W.copyDeviceToHost();
 
 		// then
 		float prev_weight_value = -1.0;
@@ -86,15 +95,25 @@ namespace {
 		std::vector<float> W_rows_values = {2, 4, 6, 8};
 		std::vector<float> A_cols_values = {3, 5, 7};
 
+		linear_layer.W.allocateHostMemory();
+		linear_layer.b.allocateHostMemory();
+
 		testutils::initializeEachTensorRowWithValue(linear_layer.W, W_rows_values);
 		testutils::initializeEachTensorColWithValue(linear_layer.b, b_cols_values);
 		testutils::initializeEachTensorColWithValue(A, A_cols_values);
 
+		linear_layer.W.copyHostToDevice();
+		linear_layer.b.copyHostToDevice();
+		A.copyHostToDevice();
+
 		// when
 		nn_utils::Tensor3D Z = linear_layer.forward(A);
 
+		Z.allocateHostMemory();
+		Z.copyDeviceToHost();
+
 		// then
-		ASSERT_NE(Z.data, nullptr);
+		ASSERT_NE(Z.data_device, nullptr);
 		ASSERT_EQ(Z.shape.x, A.shape.x);
 		ASSERT_EQ(Z.shape.y, W_shape.y);
 
@@ -112,15 +131,23 @@ namespace {
 		std::vector<float> W_cols_values = {6, 8};
 		std::vector<float> dZ_cols_values = {3, 5, 7};
 
+		linear_layer.W.allocateHostMemory();
+
 		testutils::initializeEachTensorColWithValue(linear_layer.W, W_cols_values);
 		testutils::initializeEachTensorColWithValue(dZ, dZ_cols_values);
+
+		linear_layer.W.copyHostToDevice();
+		dZ.copyHostToDevice();
 
 		// when
 		nn_utils::Tensor3D Z = linear_layer.forward(A);
 		nn_utils::Tensor3D dA = linear_layer.backprop(dZ);
 
+		dA.allocateHostMemory();
+		dA.copyDeviceToHost();
+
 		// then
-		ASSERT_NE(dA.data, nullptr);
+		ASSERT_NE(dA.data_device, nullptr);
 		ASSERT_EQ(dA.shape.x, A.shape.x);
 		ASSERT_EQ(dA.shape.y, A.shape.y);
 
@@ -138,15 +165,22 @@ namespace {
 		std::vector<float> dZ_rows_values = {3, 5, 7, 9};
 		float learning_rate = 0.1;
 
+		linear_layer.b.allocateHostMemory();
+
 		testutils::initializeEachTensorColWithValue(linear_layer.b, b_cols_values);
 		testutils::initializeEachTensorRowWithValue(dZ, dZ_rows_values);
+
+		linear_layer.b.copyHostToDevice();
+		dZ.copyHostToDevice();
 
 		// when
 		nn_utils::Tensor3D Z = linear_layer.forward(A);
 		nn_utils::Tensor3D dA = linear_layer.backprop(dZ, learning_rate);
 
+		linear_layer.b.copyDeviceToHost();
+
 		// then
-		ASSERT_NE(linear_layer.b.data, nullptr);
+		ASSERT_NE(linear_layer.b.data_device, nullptr);
 
 		for (int x = 0; x < linear_layer.b.shape.x; x++) {
 			float bias_after_gdc = b_cols_values[x] - learning_rate * dZ_rows_values[x];
@@ -161,16 +195,24 @@ namespace {
 		std::vector<float> A_rows_values = {2, 4};
 		float learning_rate = 0.1;
 
+		linear_layer.W.allocateHostMemory();
+
 		testutils::initializeEachTensorColWithValue(linear_layer.W, W_cols_values);
 		testutils::initializeEachTensorRowWithValue(dZ, dZ_rows_values);
 		testutils::initializeEachTensorRowWithValue(A, A_rows_values);
+
+		linear_layer.W.copyHostToDevice();
+		dZ.copyHostToDevice();
+		A.copyHostToDevice();
 
 		// when
 		nn_utils::Tensor3D Z = linear_layer.forward(A);
 		nn_utils::Tensor3D dA = linear_layer.backprop(dZ, learning_rate);
 
+		linear_layer.W.copyDeviceToHost();
+
 		// then
-		ASSERT_NE(linear_layer.W.data, nullptr);
+		ASSERT_NE(linear_layer.W.data_device, nullptr);
 
 		for (int x = 0; x < W_shape.x; x++) {
 			for (int y = 0; y < W_shape.y; y++) {

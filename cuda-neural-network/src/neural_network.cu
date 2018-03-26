@@ -12,7 +12,7 @@ NeuralNetwork::~NeuralNetwork() {
 		delete *it;
 	}
 
-	dY.freeCudaMemory();
+	dY.freeCudaAndHostMemory();
 }
 
 void NeuralNetwork::addLayer(NNLayer* layer) {

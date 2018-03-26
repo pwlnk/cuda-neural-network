@@ -10,6 +10,7 @@ namespace nn_utils {
 	void throwIfDeviceErrorsOccurred(const char* exception_message) {
 		cudaError_t error = cudaGetLastError();
 		if (error != cudaSuccess) {
+			std::cerr << error << ": " << exception_message;
 			throw NNException(exception_message);
 		}
 	}
@@ -19,48 +20,97 @@ namespace nn_utils {
 	{ }
 
 	Tensor3D::Tensor3D(size_t x_dim, size_t y_dim, size_t z_dim) :
-		shape(x_dim, y_dim, z_dim), data(nullptr), memory_allocated(false)
+		shape(x_dim, y_dim, z_dim), data_device(nullptr), data_host(nullptr),
+		device_allocated(false), host_allocated(false)
 	{ }
 
 	Tensor3D::Tensor3D(Shape shape) :
-		shape(shape), data(nullptr), memory_allocated(false)
+		Tensor3D(shape.x, shape.y, shape.z)
 	{ }
 
 	void Tensor3D::allocateCudaMemory() {
-		cudaMallocManaged(&data, shape.x * shape.y * shape.z * sizeof(float));
-		throwIfDeviceErrorsOccurred("Cannot allocate CUDA memory for Tensor3D.");
-		memory_allocated = true;
+		if (!device_allocated) {
+			cudaMalloc(&data_device, shape.x * shape.y * shape.z * sizeof(float));
+			throwIfDeviceErrorsOccurred("Cannot allocate CUDA memory for Tensor3D.");
+			device_allocated = true;
+		}
+	}
+
+	void Tensor3D::allocateHostMemory() {
+		if (!host_allocated) {
+			data_host = new float[shape.x * shape.y];
+			host_allocated = true;
+		}
 	}
 
 	void Tensor3D::allocateIfNotAllocated(nn_utils::Shape shape) {
-		if (!memory_allocated) {
+		if (!device_allocated) {
 			this->shape = shape;
 			allocateCudaMemory();
 		}
 	}
 
 	void Tensor3D::freeCudaMemory() {
-		if (memory_allocated) {
-			cudaFree(data);
+		if (device_allocated) {
+			cudaFree(data_device);
+			throwIfDeviceErrorsOccurred("Cannot free cuda memory.");
 		}
-		data = nullptr;
-		memory_allocated = false;
+		data_device = nullptr;
+		device_allocated = false;
+	}
+
+	void Tensor3D::freeHostMemory() {
+		if (host_allocated) {
+			delete [] data_host;
+		}
+		data_host = nullptr;
+		host_allocated = false;
+	}
+
+	void Tensor3D::freeCudaAndHostMemory() {
+		freeCudaMemory();
+		freeHostMemory();
+	}
+
+	void Tensor3D::copyHostToDevice() {
+		if (device_allocated && host_allocated) {
+			cudaMemcpy(data_device, data_host, shape.x * shape.y * shape.z * sizeof(float), cudaMemcpyHostToDevice);
+			throwIfDeviceErrorsOccurred("Cannot copy host data to CUDA device.");
+		}
+		else {
+			throw NNException("Cannot copy host data to not allocated memory on device.");
+		}
+	}
+
+	void Tensor3D::copyDeviceToHost() {
+		if (device_allocated && host_allocated) {
+			cudaMemcpy(data_host, data_device, shape.x * shape.y * shape.z * sizeof(float), cudaMemcpyDeviceToHost);
+			throwIfDeviceErrorsOccurred("Cannot copy device data to host.");
+		}
+		else {
+			throw NNException("Cannot copy device data to not allocated memory on host.");
+		}
 	}
 
 	float& Tensor3D::operator[](const int index) {
-		return data[index];
+		return data_host[index];
 	}
 
 	const float& Tensor3D::operator[](const int index) const {
-		return data[index];
+		return data_host[index];
 	}
 
 	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
 		assert(predictions.shape.x == target.shape.x);
 
+		predictions.allocateHostMemory();
+		predictions.copyDeviceToHost();
+		target.allocateHostMemory();
+		target.copyDeviceToHost();
+
 		float cost = 0.0;
 		for (int i = 0; i < predictions.shape.x; i++) {
-			cost += target.data[i] * log(predictions.data[i]) + (1 - target.data[i]) * log(1 - predictions.data[i]);
+			cost += target[i] * log(predictions[i]) + (1 - target[i]) * log(1 - predictions[i]);
 		}
 
 		return -cost / predictions.shape.x;
@@ -71,12 +121,20 @@ namespace nn_utils {
 		assert(predictions.shape.x == target.shape.x);
 
 		dY.allocateIfNotAllocated(predictions.shape);
+		dY.allocateHostMemory();
+
+
+		predictions.allocateHostMemory();
+		predictions.copyDeviceToHost();
+		target.allocateHostMemory();
+		target.copyDeviceToHost();
 
 		for (int i = 0; i < predictions.shape.x; i++) {
 			// TODO: what sign should be here + or - ?
-			dY.data[i] =  (predictions.data[i] - target.data[i]) / (static_cast<double>(1 - predictions.data[i]) * predictions.data[i]);
+			dY[i] =  (predictions[i] - target[i]) / (static_cast<double>(1 - predictions[i]) * predictions[i]);
 		}
 
+		dY.copyHostToDevice();
 		return dY;
 	}
 

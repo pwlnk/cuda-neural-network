@@ -113,22 +113,34 @@ LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
 }
 
 void LinearLayer::initializeWeightsRandomly() {
+	W.allocateHostMemory();
+
 	for (int x = 0; x < W.shape.x; x++) {
 		for (int y = 0; y < W.shape.y; y++) {
 			W[y * W.shape.x + x] = (static_cast<float>(rand()) / RAND_MAX) * weights_init_threshold;
 		}
 	}
+
+	W.copyHostToDevice();
+	W.freeHostMemory();
 }
 
 void LinearLayer::initializeBiasWithZeros() {
+	b.allocateHostMemory();
+
 	for (int x = 0; x < b.shape.x; x++) {
 		b[x] = 0;
 	}
+
+	b.copyHostToDevice();
+	b.freeHostMemory();
 }
 
 LinearLayer::~LinearLayer() {
-	W.freeCudaMemory();
-	Z.freeCudaMemory();
+	W.freeCudaAndHostMemory();
+	b.freeCudaAndHostMemory();
+	Z.freeCudaAndHostMemory();
+	dA.freeCudaAndHostMemory();
 }
 
 nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
@@ -136,11 +148,11 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 
 	this->A = A;
 	Z.allocateIfNotAllocated(nn_utils::Shape(A.shape.x, W.shape.y));
-	cudaMemset(Z.data, 0, Z.shape.x * Z.shape.y * sizeof(float));
+	cudaMemset(Z.data_device, 0, Z.shape.x * Z.shape.y * sizeof(float));
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((W.shape.y * W.shape.x + block_size.x - 1) / block_size.x);
-	weightedSum<<<block_size, num_of_blocks>>>(A.data, W.data, Z.data,
+	weightedSum<<<block_size, num_of_blocks>>>(A.data_device, W.data_device, Z.data_device,
 											   A.shape.x, A.shape.y,
 											   W.shape.x, W.shape.y);
 	cudaDeviceSynchronize();
@@ -148,7 +160,7 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 
 	block_size.x = 256;
 	num_of_blocks.x = (Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x;
-	addBias<<<block_size, num_of_blocks>>>(Z.data, b.data, Z.shape.x, Z.shape.y);
+	addBias<<<block_size, num_of_blocks>>>(Z.data_device, b.data_device, Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
@@ -158,21 +170,21 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ, float learning_rate) {
 
 	dA.allocateIfNotAllocated(A.shape);
-	cudaMemset(dA.data, 0, dA.shape.x * dA.shape.y * sizeof(float));
+	cudaMemset(dA.data_device, 0, dA.shape.x * dA.shape.y * sizeof(float));
 
 	// compute dA
 	dim3 block_size(256);
 	dim3 num_of_blocks((W.shape.y * W.shape.x + block_size.x - 1) / block_size.x);
-	linearLayerBackprop<<<block_size, num_of_blocks>>>(W.data, dZ.data, dA.data,
+	linearLayerBackprop<<<block_size, num_of_blocks>>>(W.data_device, dZ.data_device, dA.data_device,
 														W.shape.x, W.shape.y,
 														dZ.shape.x, dZ.shape.y);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize(); // TODO: probably some syncs can be removed
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
 	// compute db and do GDC
 	block_size.x = 256;
 	num_of_blocks.x = (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x;
-	biasGDC<<<block_size, num_of_blocks>>>(dZ.data, b.data,
+	biasGDC<<<block_size, num_of_blocks>>>(dZ.data_device, b.data_device,
 										   dZ.shape.x, dZ.shape.y,
 										   b.shape.x, learning_rate);
 	cudaDeviceSynchronize();
@@ -181,7 +193,7 @@ nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ, float learning_r
 	// compute dW and do GDC
 	block_size.x = 256;
 	num_of_blocks.x = (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x;
-	weightsGDC<<<block_size, num_of_blocks>>>(A.data, dZ.data, W.data,
+	weightsGDC<<<block_size, num_of_blocks>>>(A.data_device, dZ.data_device, W.data_device,
 											  A.shape.x, A.shape.y,
 											  dZ.shape.x, dZ.shape.y,
 											  learning_rate);
@@ -199,10 +211,10 @@ int LinearLayer::getYDim() const {
 	return W.shape.y;
 }
 
-const nn_utils::Tensor3D LinearLayer::getWeightsMatrix() const {
+nn_utils::Tensor3D LinearLayer::getWeightsMatrix() const {
 	return W;
 }
 
-const nn_utils::Tensor3D LinearLayer::getBiasVector() const {
+nn_utils::Tensor3D LinearLayer::getBiasVector() const {
 	return b;
 }

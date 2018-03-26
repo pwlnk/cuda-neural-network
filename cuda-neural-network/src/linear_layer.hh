@@ -41,6 +41,6 @@ public:
 
 	int getXDim() const;
 	int getYDim() const;
-	const nn_utils::Tensor3D getWeightsMatrix() const;
-	const nn_utils::Tensor3D getBiasVector() const;
+	nn_utils::Tensor3D getWeightsMatrix() const;
+	nn_utils::Tensor3D getBiasVector() const;
 };

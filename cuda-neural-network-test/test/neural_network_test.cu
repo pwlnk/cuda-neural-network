@@ -18,9 +18,9 @@ namespace {
 		nn_utils::Tensor3D target;
 
 		virtual void TearDown() {
-			X.freeCudaMemory();
-			predictions.freeCudaMemory();
-			target.freeCudaMemory();
+			X.freeCudaAndHostMemory();
+			predictions.freeCudaAndHostMemory();
+			target.freeCudaAndHostMemory();
 		}
 	};
 
@@ -57,9 +57,17 @@ namespace {
 		ReLUActivation* relu_layer = new ReLUActivation("relu_layer");
 		LinearLayer* linear_layer_2 = new LinearLayer("linear_layer_2", nn_utils::Shape(4, output_shape.y));
 
+		X.allocateHostMemory();
+		linear_layer_1->W.allocateHostMemory();
+		linear_layer_2->W.allocateHostMemory();
+
 		testutils::initializeTensorWithValue(X, 4);
 		testutils::initializeTensorWithValue(linear_layer_1->W, 2);
 		testutils::initializeTensorWithValue(linear_layer_2->W, 3);
+
+		X.copyHostToDevice();
+		linear_layer_1->W.copyHostToDevice();
+		linear_layer_2->W.copyHostToDevice();
 
 		// when
 		neural_network.addLayer(linear_layer_1);
@@ -67,14 +75,17 @@ namespace {
 		neural_network.addLayer(linear_layer_2);
 		nn_utils::Tensor3D Y = neural_network.forward(X);
 
+		Y.allocateHostMemory();
+		Y.copyDeviceToHost();
+
 		// then
-		ASSERT_NE(Y.data, nullptr);
+		ASSERT_NE(Y.data_device, nullptr);
 		ASSERT_EQ(Y.shape.x, output_shape.x);
 		ASSERT_EQ(Y.shape.y, output_shape.y);
 
 		for (int out_x = 0; out_x < output_shape.x; out_x++) {
 			for (int out_y = 0; out_y < output_shape.y; out_y++) {
-				ASSERT_EQ(Y.data[out_y * output_shape.x + out_x], 1920);
+				ASSERT_EQ(Y[out_y * output_shape.x + out_x], 1920);
 			}
 		}
 	}

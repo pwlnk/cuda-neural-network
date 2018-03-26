@@ -10,7 +10,7 @@ namespace testutils {
 	void initializeTensorWithValue(nn_utils::Tensor3D M, float value) {
 		for (int x = 0; x < M.shape.x; x++) {
 			for (int y = 0; y < M.shape.y; y++) {
-				M.data[y * M.shape.x + x] = value;
+				M[y * M.shape.x + x] = value;
 			}
 		}
 	}
@@ -19,7 +19,7 @@ namespace testutils {
 		srand( time(NULL) );
 		for (int x = 0; x < M.shape.x; x++) {
 			for (int y = 0; y < M.shape.y; y++) {
-				M.data[y * M.shape.x + x] = (static_cast<float>(rand()) / RAND_MAX) * (max - min) + min;
+				M[y * M.shape.x + x] = (static_cast<float>(rand()) / RAND_MAX) * (max - min) + min;
 			}
 		}
 	}
