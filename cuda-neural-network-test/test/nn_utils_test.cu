@@ -49,7 +49,9 @@ namespace {
 		// given
 		testutils::initializeTensorWithValue(predictions, 0.0001);
 		testutils::initializeTensorWithValue(target, 1);
-		nn_utils::Tensor3D dY;
+
+		nn_utils::Tensor3D dY(predictions.shape);
+		dY.allocateCudaMemory();
 
 		predictions.copyHostToDevice();
 		target.copyHostToDevice();
@@ -59,6 +61,7 @@ namespace {
 		// when
 		nn_utils::Tensor3D d_cross_entropy_loss = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
 
+		d_cross_entropy_loss.allocateHostMemory();
 		d_cross_entropy_loss.copyDeviceToHost();
 
 		// then

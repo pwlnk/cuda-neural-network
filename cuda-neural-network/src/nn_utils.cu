@@ -5,13 +5,24 @@
 #include <iostream>
 #include <assert.h>
 
-__global__ void compute_cross_entropy_cost(float* predictions, float* target,
+__global__ void cross_entropy_cost(float* predictions, float* target,
 										   int size, float* cost) {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index < size) {
-		float partial_cost = target[index] * logf(predictions[index]) + (1.0f - target[index]) * logf(1.0f - predictions[index]);
+		float partial_cost = target[index] * logf(predictions[index])
+				+ (1.0f - target[index]) * logf(1.0f - predictions[index]);
 		atomicAdd(cost, - partial_cost / size);
+	}
+}
+
+__global__ void d_cross_entropy_cost(float* predictions, float* target, float* dY,
+								     int size) {
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (index < size) {
+		dY[index] =  (predictions[index] - target[index])
+				/ (static_cast<double>(1.0f - predictions[index]) * predictions[index]);
 	}
 }
 
@@ -119,7 +130,7 @@ namespace nn_utils {
 
 		dim3 block_size(256);
 		dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
-		compute_cross_entropy_cost<<<block_size, num_of_blocks>>>(predictions.data_device, target.data_device,
+		cross_entropy_cost<<<block_size, num_of_blocks>>>(predictions.data_device, target.data_device,
 															      predictions.shape.x, cost);
 		cudaDeviceSynchronize();
 		nn_utils::throwIfDeviceErrorsOccurred("Cannot compute binary cross entropy cost.");
@@ -130,25 +141,16 @@ namespace nn_utils {
 		return cost_value;
 	}
 
-	// TODO: move operation to CUDA
 	Tensor3D dBinaryCrossEntropyCost(Tensor3D predictions, Tensor3D target, Tensor3D dY) {
 		assert(predictions.shape.x == target.shape.x);
 
-		dY.allocateIfNotAllocated(predictions.shape);
-		dY.allocateHostMemory();
+		dim3 block_size(256);
+		dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
+		d_cross_entropy_cost<<<block_size, num_of_blocks>>>(predictions.data_device, target.data_device, dY.data_device,
+															predictions.shape.x);
+		cudaDeviceSynchronize();
+		nn_utils::throwIfDeviceErrorsOccurred("Cannot compute derivative for binary cross entropy.");
 
-
-		predictions.allocateHostMemory();
-		predictions.copyDeviceToHost();
-		target.allocateHostMemory();
-		target.copyDeviceToHost();
-
-		for (int i = 0; i < predictions.shape.x; i++) {
-			// TODO: what sign should be here + or - ?
-			dY[i] =  (predictions[i] - target[i]) / (static_cast<double>(1 - predictions[i]) * predictions[i]);
-		}
-
-		dY.copyHostToDevice();
 		return dY;
 	}
 
