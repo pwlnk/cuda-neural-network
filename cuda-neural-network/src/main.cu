@@ -35,7 +35,7 @@ int main() {
 
 	nn_utils::Tensor3D Y;
 
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 5000; i++) {
 		Y = nn.forward(X);
 		nn.backprop(Y, target);
 	}

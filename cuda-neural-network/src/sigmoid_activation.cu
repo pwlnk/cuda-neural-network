@@ -42,7 +42,7 @@ nn_utils::Tensor3D SigmoidActivation::forward(nn_utils::Tensor3D Z) {
 	dim3 block_size(256);
 	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);
 
-	sigmoid_activation_forward<<<block_size, num_of_blocks>>>(Z.data_device, A.data_device,
+	sigmoid_activation_forward<<<num_of_blocks, block_size>>>(Z.data_device, A.data_device,
 														   	  Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform sigmoid forward prop.");
@@ -56,7 +56,7 @@ nn_utils::Tensor3D SigmoidActivation::backprop(nn_utils::Tensor3D dA, float lear
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);
-	sigmoid_activation_backprop<<<block_size, num_of_blocks>>>(Z.data_device, dA.data_device, dZ.data_device,
+	sigmoid_activation_backprop<<<num_of_blocks, block_size>>>(Z.data_device, dA.data_device, dZ.data_device,
 															   Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform sigmoid backprop");

@@ -130,7 +130,7 @@ namespace nn_utils {
 
 		dim3 block_size(256);
 		dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
-		cross_entropy_cost<<<block_size, num_of_blocks>>>(predictions.data_device, target.data_device,
+		cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device, target.data_device,
 															      predictions.shape.x, cost);
 		cudaDeviceSynchronize();
 		nn_utils::throwIfDeviceErrorsOccurred("Cannot compute binary cross entropy cost.");
@@ -146,7 +146,7 @@ namespace nn_utils {
 
 		dim3 block_size(256);
 		dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
-		d_cross_entropy_cost<<<block_size, num_of_blocks>>>(predictions.data_device, target.data_device, dY.data_device,
+		d_cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device, target.data_device, dY.data_device,
 															predictions.shape.x);
 		cudaDeviceSynchronize();
 		nn_utils::throwIfDeviceErrorsOccurred("Cannot compute derivative for binary cross entropy.");

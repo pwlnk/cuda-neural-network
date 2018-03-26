@@ -32,6 +32,8 @@ nn_utils::Tensor3D NeuralNetwork::forward(nn_utils::Tensor3D X) {
 
 void NeuralNetwork::backprop(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
 
+	dY.allocateIfNotAllocated(predictions.shape);
+
 	nn_utils::Tensor3D err = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
 
 	for (std::vector<NNLayer*>::reverse_iterator it = this->layers.rbegin(); it != this->layers.rend(); it++) {
