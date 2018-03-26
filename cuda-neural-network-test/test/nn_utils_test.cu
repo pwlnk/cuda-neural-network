@@ -2,6 +2,8 @@
 #include "test_utils.hh"
 #include "nn_utils.hh"
 
+#include <iostream>
+
 namespace {
 
 	class NNUtilsTest : public ::testing::Test {
@@ -36,14 +38,14 @@ namespace {
 		target.copyHostToDevice();
 
 		// when
-		float loss = nn_utils::binaryCrossEntropyCost(predictions, target);
+		float cost = nn_utils::binaryCrossEntropyCost(predictions, target);
 
 		// then
-		ASSERT_NEAR(loss, -log(0.0001), 0.0001);
+		ASSERT_NEAR(cost, -log(0.0001), 0.0001);
 	}
 
 
-	TEST_F(NNUtilsTest, DISABLED_ShouldCalculateDerivativeOfBinaryCrossEntropyLoss) {
+	TEST_F(NNUtilsTest, ShouldCalculateDerivativeOfBinaryCrossEntropyLoss) {
 		// given
 		testutils::initializeTensorWithValue(predictions, 0.0001);
 		testutils::initializeTensorWithValue(target, 1);
@@ -52,7 +54,7 @@ namespace {
 		predictions.copyHostToDevice();
 		target.copyHostToDevice();
 
-		float expected_derivative = - (0.0001 - 1) / ((1 - 0.0001) * 0.0001);
+		float expected_derivative = (0.0001 - 1) / ((1 - 0.0001) * 0.0001);
 
 		// when
 		nn_utils::Tensor3D d_cross_entropy_loss = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);

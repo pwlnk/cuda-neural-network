@@ -5,6 +5,16 @@
 #include <iostream>
 #include <assert.h>
 
+__global__ void compute_cross_entropy_cost(float* predictions, float* target,
+										   int size, float* cost) {
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (index < size) {
+		float partial_cost = target[index] * logf(predictions[index]) + (1.0f - target[index]) * logf(1.0f - predictions[index]);
+		atomicAdd(cost, - partial_cost / size);
+	}
+}
+
 namespace nn_utils {
 
 	void throwIfDeviceErrorsOccurred(const char* exception_message) {
@@ -103,17 +113,21 @@ namespace nn_utils {
 	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
 		assert(predictions.shape.x == target.shape.x);
 
-		predictions.allocateHostMemory();
-		predictions.copyDeviceToHost();
-		target.allocateHostMemory();
-		target.copyDeviceToHost();
+		float* cost;
+		cudaMallocManaged(&cost, sizeof(float));
+		*cost = 0.0f;
 
-		float cost = 0.0;
-		for (int i = 0; i < predictions.shape.x; i++) {
-			cost += target[i] * log(predictions[i]) + (1 - target[i]) * log(1 - predictions[i]);
-		}
+		dim3 block_size(256);
+		dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
+		compute_cross_entropy_cost<<<block_size, num_of_blocks>>>(predictions.data_device, target.data_device,
+															      predictions.shape.x, cost);
+		cudaDeviceSynchronize();
+		nn_utils::throwIfDeviceErrorsOccurred("Cannot compute binary cross entropy cost.");
 
-		return -cost / predictions.shape.x;
+		float cost_value = *cost;
+		cudaFree(cost);
+
+		return cost_value;
 	}
 
 	// TODO: move operation to CUDA
