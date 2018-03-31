@@ -46,7 +46,7 @@ __global__ void linearLayerBackprop(float* W, float* dZ, float *dA,
 	int dA_x_dim = dZ_x_dim;
 	int dA_y_dim = W_x_dim;
 
-	float dA_value = 0;
+	float dA_value = 0.0f;
 
 	if (row < dA_y_dim && col < dA_x_dim) {
 		for (int i = 0; i < W_y_dim; i++) {
@@ -54,27 +54,28 @@ __global__ void linearLayerBackprop(float* W, float* dZ, float *dA,
 		}
 		dA[row * dA_x_dim + col] = dA_value;
 	}
+}
 
-//	int index = blockIdx.x * blockDim.x + threadIdx.x;
-//
-//	if (index < W_x_dim * W_y_dim) {
-//		// W is treated as it would be transposed
-//		int W_y = index % W_x_dim;
-//		int W_x = index / W_x_dim;
-//
-//		int dA_x_dim = dZ_x_dim;
-//		int dA_y = W_y;
-//		int dA_x = 0;
-//
-//		int dZ_y = W_x;
-//		float product_val = 0;
-//
-//		for (int dZ_x = 0; dZ_x < dZ_x_dim; dZ_x++) {
-//			dA_x = dZ_x;
-//			product_val = W[index] * dZ[dZ_y * dZ_x_dim + dZ_x];
-//			atomicAdd(&dA[dA_y * dA_x_dim + dA_x], product_val);
-//		}
-//	}
+__global__ void weightsGDC(float* dZ, float* A, float* W,
+						   int dZ_x_dim, int dZ_y_dim,
+						   int A_x_dim, int A_y_dim,
+						   float learning_rate) {
+
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+	// A is treated as transposed
+	int W_x_dim = A_y_dim;
+	int W_y_dim = dZ_y_dim;
+
+	float dW_value = 0.0f;
+
+	if (row < W_y_dim && col < W_y_dim) {
+		for (int i = 0; i < dZ_x_dim; i++) {
+			dW_value += dZ[row * dZ_x_dim + i] * A[col * A_x_dim + i];
+		}
+		W[row * W_x_dim + col] = W[row * W_x_dim + col] - learning_rate * (dW_value / A_x_dim);
+	}
 }
 
 __global__ void biasGDC(float* dZ, float* b,
@@ -87,28 +88,6 @@ __global__ void biasGDC(float* dZ, float* b,
 		int dZ_x = index % dZ_x_dim;
 		int dZ_y = index / dZ_x_dim;
 		atomicAdd(&b[dZ_y], - learning_rate * (dZ[dZ_y * dZ_x_dim + dZ_x] / dZ_x_dim));
-	}
-}
-
-__global__ void weightsGDC(float* A, float* dZ, float* W,
-						   int A_x_dim, int A_y_dim,
-						   int dZ_x_dim, int dZ_y_dim,
-						   float learning_rate) {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (index < dZ_x_dim * dZ_y_dim) {
-		int dZ_x = index % dZ_x_dim;
-		int dZ_y = index / dZ_x_dim;
-
-		int A_x = dZ_x; // A is treated as it would be transposed
-		int W_y = dZ_y;
-		int W_x_dim = A_y_dim;
-
-		for (int A_y = 0; A_y < A_y_dim; A_y++) {
-			int W_x = A_y;
-			float product_val = dZ[dZ_y * dZ_x_dim + dZ_x] * A[A_y * A_x_dim + A_x];
-			atomicAdd(&W[W_y * W_x_dim + W_x], - learning_rate * (product_val / A_x_dim));
-		}
 	}
 }
 
@@ -206,11 +185,12 @@ nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ, float learning_r
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform bias GDC.");
 
 	// compute dW and do GDC
-	block_size.x = 256;
-	num_of_blocks.x = (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x;
-	weightsGDC<<<num_of_blocks, block_size>>>(A.data_device, dZ.data_device, W.data_device,
-											  A.shape.x, A.shape.y,
+	block_size = dim3(16, 16);
+	num_of_blocks = dim3((W.shape.x + block_size.x - 1) / block_size.x,
+						 (W.shape.y + block_size.y - 1) / block_size.y);
+	weightsGDC<<<num_of_blocks, block_size>>>(dZ.data_device, A.data_device, W.data_device,
 											  dZ.shape.x, dZ.shape.y,
+											  A.shape.x, A.shape.y,
 											  learning_rate);
 	cudaDeviceSynchronize();
 	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform weights GDC.");

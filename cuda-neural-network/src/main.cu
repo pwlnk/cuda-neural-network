@@ -28,14 +28,14 @@ int main() {
 	target.copyHostToDevice();
 
 	NeuralNetwork nn;
-	nn.addLayer(new LinearLayer("linear_1", nn_utils::Shape(1, 25)));
+	nn.addLayer(new LinearLayer("linear_1", nn_utils::Shape(1, 100)));
 	nn.addLayer(new ReLUActivation("relu_1"));
-	nn.addLayer(new LinearLayer("linear_2", nn_utils::Shape(25, 1)));
+	nn.addLayer(new LinearLayer("linear_2", nn_utils::Shape(100, 1)));
 	nn.addLayer(new SigmoidActivation("sigmoid_output"));
 
 	nn_utils::Tensor3D Y;
 
-	for (int i = 0; i < 5000; i++) {
+	for (int i = 0; i < 1000; i++) {
 		Y = nn.forward(X);
 		nn.backprop(Y, target);
 	}
