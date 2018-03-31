@@ -1,5 +1,6 @@
 #include <iostream>
 #include <time.h>
+#include <vector>
 
 #include "neural_network.hh"
 #include "linear_layer.hh"
@@ -11,41 +12,51 @@ int main() {
 
 	srand( time(NULL) );
 
-	nn_utils::Tensor3D X(100, 1);
-	X.allocateCudaMemory();
-	X.allocateHostMemory();
+	std::vector<nn_utils::Tensor3D> dataset;
+	std::vector<nn_utils::Tensor3D> targets;
 
-	nn_utils::Tensor3D target(100, 1);
-	target.allocateCudaMemory();
-	target.allocateHostMemory();
+	for (int i = 0; i < 20; i++) {
+		dataset.push_back(nn_utils::Tensor3D(100, 2));
+		targets.push_back(nn_utils::Tensor3D(100, 1));
 
-	for (int i = 0; i < X.shape.x; i++) {
-		X[i] = i;
-		target[i] = i <= 50 ? 0 : 1;
+		dataset[i].allocateCudaMemory();
+		dataset[i].allocateHostMemory();
+
+		targets[i].allocateCudaMemory();
+		targets[i].allocateHostMemory();
+
+		for (int k = 0; k < dataset[i].shape.x; k++) {
+			dataset[i][k] = (float(rand()) / RAND_MAX - 0.5);
+			dataset[i][dataset[i].shape.x + k] = (float(rand()) / RAND_MAX - 0.5);
+//			targets[i][k] = dataset[i][k * 2] > 0 && dataset[i][k * 2 + 1] > 0 ? 1 : 0;
+			targets[i][k] = dataset[i][k] > 0 ? 1 : 0;
+		}
+
+		dataset[i].copyHostToDevice();
+		targets[i].copyHostToDevice();
 	}
 
-	X.copyHostToDevice();
-	target.copyHostToDevice();
-
 	NeuralNetwork nn;
-	nn.addLayer(new LinearLayer("linear_1", nn_utils::Shape(1, 100)));
+	nn.addLayer(new LinearLayer("linear_1", nn_utils::Shape(2, 100)));
 	nn.addLayer(new ReLUActivation("relu_1"));
 	nn.addLayer(new LinearLayer("linear_2", nn_utils::Shape(100, 1)));
 	nn.addLayer(new SigmoidActivation("sigmoid_output"));
 
 	nn_utils::Tensor3D Y;
 
-	for (int i = 0; i < 1000; i++) {
-		Y = nn.forward(X);
-		nn.backprop(Y, target);
+	for (int epoch = 0; epoch < 1001; epoch++) {
+		float cost = 0.0;
+
+		for (int batch = 0; batch < 20; batch++) {
+			Y = nn.forward(dataset[batch]);
+			nn.backprop(Y, targets[batch]);
+			cost += nn_utils::binaryCrossEntropyCost(Y, targets[batch]);
+		}
+
+		if (epoch % 100 == 0) {
+			std::cout << "epoch: " << epoch << ", cost: " << cost / 20 << std::endl;
+		}
 	}
-
-	Y.allocateHostMemory();
-	Y.copyDeviceToHost();
-
-	std::cout << "Prediction: " << Y[1]
-								  << ", Target: " << target[1]
-								  << ", Cost: " << nn_utils::binaryCrossEntropyCost(Y, target) << std::endl;
 
 	return 0;
 }

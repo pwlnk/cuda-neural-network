@@ -21,8 +21,7 @@ __global__ void d_cross_entropy_cost(float* predictions, float* target, float* d
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index < size) {
-		dY[index] =  (predictions[index] - target[index])
-				/ (static_cast<double>(1.0f - predictions[index]) * predictions[index]);
+		dY[index] = -1.0 * ( target[index]/predictions[index] - (1 - target[index])/(1 - predictions[index]) );
 	}
 }
 

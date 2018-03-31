@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <iostream>
+#include <random>
 
 #include "linear_layer.hh"
 #include "nn_exception.hh"
@@ -107,9 +109,12 @@ LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
 void LinearLayer::initializeWeightsRandomly() {
 	W.allocateHostMemory();
 
+	std::default_random_engine generator;
+	std::normal_distribution<float> normal_distribution(0.0, 1.0);
+
 	for (int x = 0; x < W.shape.x; x++) {
 		for (int y = 0; y < W.shape.y; y++) {
-			W[y * W.shape.x + x] = (static_cast<float>(rand()) / RAND_MAX) * weights_init_threshold;
+			W[y * W.shape.x + x] = normal_distribution(generator) * weights_init_threshold;
 		}
 	}
 

@@ -3,7 +3,7 @@
 #include <iostream>
 
 __device__ float sigmoid(float x) {
-	return exp(x) / (1 + exp(x));
+	return 1.0f / (1 + exp(-x));
 }
 
 __global__ void sigmoid_activation_forward(float* Z, float* A,
