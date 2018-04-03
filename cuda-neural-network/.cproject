@@ -52,6 +52,22 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="com.nvidia.cuda.ide.on_path.configuration.debug.884352035.682470978" name="/" resourcePath="src/layers">
+						<toolChain id="com.nvidia.cuda.tools.toolchain.on_path.exe.debug.1163419905" name="CUDA Toolkit on the path" superClass="com.nvidia.cuda.tools.toolchain.on_path.exe.debug" unusedChildren="">
+							<targetPlatform archList="all" binaryParser="com.nvidia.cuda.ide.elf;com.nvidia.cuda.ide.macho;com.nvidia.cuda.ide.cubin" id="com.nvidia.cuda.ide.targetPlatform" isAbstract="false" name="Debug Platform" osList="linux,macosx" superClass="com.nvidia.cuda.ide.targetPlatform"/>
+							<tool id="nvcc.compiler.base.1736106677" name="NVCC Compiler" superClass="nvcc.compiler.base.1708173991">
+								<option id="nvcc.compiler.include.paths.303759784" name="Include paths (-I)" superClass="nvcc.compiler.include.paths" valueType="includePath"/>
+								<inputType id="nvcc.compiler.input.cu.1968485556" superClass="nvcc.compiler.input.cu"/>
+								<inputType id="nvcc.compiler.input.cpp.1857958222" superClass="nvcc.compiler.input.cpp"/>
+								<inputType id="nvcc.compiler.input.c.1172988793" superClass="nvcc.compiler.input.c"/>
+							</tool>
+							<tool id="nvcc.linker.base.1818427660" name="NVCC Linker" superClass="nvcc.linker.base.309576379"/>
+							<tool id="nvcc.archiver.base.1305579145" name="NVCC Archiver" superClass="nvcc.archiver.base.791783563"/>
+							<tool id="com.nvidia.host.assembler.1055881972" name="Host Assembler" superClass="com.nvidia.host.assembler.662447299">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1617467036" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
 					<sourceEntries>
 						<entry excluding="test/test_main.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>

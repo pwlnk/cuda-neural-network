@@ -3,8 +3,8 @@
 
 #include "gtest/gtest.h"
 #include "neural_network.hh"
-#include "linear_layer.hh"
-#include "relu_activation.hh"
+#include "layers/linear_layer.hh"
+#include "layers/relu_activation.hh"
 #include "test_utils.hh"
 #include "nn_utils/matrix.hh"
 

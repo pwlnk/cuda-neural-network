@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "nn_layer.hh"
+#include "layers/nn_layer.hh"
 #include "nn_utils/bce_cost.hh"
 
 class NeuralNetwork {

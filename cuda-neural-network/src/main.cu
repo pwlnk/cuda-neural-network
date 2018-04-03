@@ -3,9 +3,9 @@
 #include <vector>
 
 #include "neural_network.hh"
-#include "linear_layer.hh"
-#include "relu_activation.hh"
-#include "sigmoid_activation.hh"
+#include "layers/linear_layer.hh"
+#include "layers/relu_activation.hh"
+#include "layers/sigmoid_activation.hh"
 #include "nn_utils/nn_exception.hh"
 #include "nn_utils/bce_cost.hh"
 

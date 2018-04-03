@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "sigmoid_activation.hh"
+#include "layers/sigmoid_activation.hh"
 #include "test_utils.hh"
 #include "nn_utils/nn_exception.hh"
 #include "nn_utils/matrix.hh"

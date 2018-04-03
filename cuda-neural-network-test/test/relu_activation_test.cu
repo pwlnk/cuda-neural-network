@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "relu_activation.hh"
+#include "layers/relu_activation.hh"
 #include "test_utils.hh"
 #include "nn_utils/matrix.hh"
 

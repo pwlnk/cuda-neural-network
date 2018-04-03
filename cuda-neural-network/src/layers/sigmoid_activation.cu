@@ -1,5 +1,5 @@
 #include "sigmoid_activation.hh"
-#include "nn_utils/nn_exception.hh"
+#include "../nn_utils/nn_exception.hh"
 #include <iostream>
 
 __device__ float sigmoid(float x) {
