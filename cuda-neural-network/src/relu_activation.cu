@@ -1,5 +1,5 @@
 #include "relu_activation.hh"
-#include "nn_utils.hh"
+#include "nn_utils/nn_utils.hh"
 
 __global__ void relu_activation_forward(float* Z, float* A,
 									    int Z_x_dim, int Z_y_dim) {
@@ -34,7 +34,7 @@ ReLUActivation::~ReLUActivation() {
 	dZ.freeCudaAndHostMemory();
 }
 
-nn_utils::Tensor3D ReLUActivation::forward(nn_utils::Tensor3D Z) {
+Matrix ReLUActivation::forward(Matrix Z) {
 
 	this->Z = Z;
 
@@ -51,7 +51,7 @@ nn_utils::Tensor3D ReLUActivation::forward(nn_utils::Tensor3D Z) {
 	return A;
 }
 
-nn_utils::Tensor3D ReLUActivation::backprop(nn_utils::Tensor3D dA, float learning_rate) {
+Matrix ReLUActivation::backprop(Matrix dA, float learning_rate) {
 
 	dZ.allocateIfNotAllocated(Z.shape);
 

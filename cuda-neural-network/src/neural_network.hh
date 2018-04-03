@@ -7,18 +7,18 @@ class NeuralNetwork {
 private:
 	std::vector<NNLayer*> layers;
 
-	nn_utils::Tensor3D Y;
-	nn_utils::Tensor3D dY;
+	Matrix Y;
+	Matrix dY;
 
 public:
 	NeuralNetwork();
 	~NeuralNetwork();
 
-	nn_utils::Tensor3D forward(nn_utils::Tensor3D X);
-	void backprop(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);
+	Matrix forward(Matrix X);
+	void backprop(Matrix predictions, Matrix target);
 
-	float binaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);
-	float dBinaryCrossEntropyCost(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target);
+	float binaryCrossEntropyCost(Matrix predictions, Matrix target);
+	float dBinaryCrossEntropyCost(Matrix predictions, Matrix target);
 
 	void addLayer(NNLayer *layer);
 	std::vector<NNLayer*> getLayers() const;

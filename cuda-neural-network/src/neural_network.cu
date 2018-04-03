@@ -1,6 +1,6 @@
 #include "neural_network.hh"
-#include "nn_exception.hh"
-#include "nn_utils.hh"
+#include "nn_utils/nn_exception.hh"
+#include "nn_utils/nn_utils.hh"
 
 #include <iostream>
 
@@ -19,8 +19,8 @@ void NeuralNetwork::addLayer(NNLayer* layer) {
 	this->layers.push_back(layer);
 }
 
-nn_utils::Tensor3D NeuralNetwork::forward(nn_utils::Tensor3D X) {
-	nn_utils::Tensor3D Z = X;
+Matrix NeuralNetwork::forward(Matrix X) {
+	Matrix Z = X;
 
 	for (std::vector<NNLayer*>::iterator it = this->layers.begin(); it != this->layers.end(); it++) {
 		Z = (*it)->forward(Z);
@@ -30,11 +30,11 @@ nn_utils::Tensor3D NeuralNetwork::forward(nn_utils::Tensor3D X) {
 	return Y;
 }
 
-void NeuralNetwork::backprop(nn_utils::Tensor3D predictions, nn_utils::Tensor3D target) {
+void NeuralNetwork::backprop(Matrix predictions, Matrix target) {
 
 	dY.allocateIfNotAllocated(predictions.shape);
 
-	nn_utils::Tensor3D err = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
+	Matrix err = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
 
 	for (std::vector<NNLayer*>::reverse_iterator it = this->layers.rbegin(); it != this->layers.rend(); it++) {
 		err = (*it)->backprop(err, 0.01);

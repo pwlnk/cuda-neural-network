@@ -4,15 +4,15 @@
 
 class ReLUActivation : public NNLayer {
 private:
-	nn_utils::Tensor3D A;
+	Matrix A;
 
-	nn_utils::Tensor3D Z;
-	nn_utils::Tensor3D dZ;
+	Matrix Z;
+	Matrix dZ;
 
 public:
 	ReLUActivation(std::string name);
 	~ReLUActivation();
 
-	nn_utils::Tensor3D forward(nn_utils::Tensor3D Z);
-	nn_utils::Tensor3D backprop(nn_utils::Tensor3D dA, float learning_rate = 0.01);
+	Matrix forward(Matrix Z);
+	Matrix backprop(Matrix dA, float learning_rate = 0.01);
 };

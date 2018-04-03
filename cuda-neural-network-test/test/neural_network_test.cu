@@ -6,6 +6,7 @@
 #include "linear_layer.hh"
 #include "relu_activation.hh"
 #include "test_utils.hh"
+#include "nn_utils/matrix.hh"
 
 namespace {
 
@@ -13,9 +14,9 @@ namespace {
 	protected:
 		NeuralNetwork neural_network;
 
-		nn_utils::Tensor3D X;
-		nn_utils::Tensor3D predictions;
-		nn_utils::Tensor3D target;
+		Matrix X;
+		Matrix predictions;
+		Matrix target;
 
 		virtual void TearDown() {
 			X.freeCudaAndHostMemory();
@@ -26,8 +27,8 @@ namespace {
 
 	TEST_F(NeuralNetworkTest, ShouldStoreAddedLayersInOrder) {
 		// given
-		LinearLayer* lin_layer_1 = new LinearLayer("linear_layer_1", nn_utils::Shape(10, 10));
-		LinearLayer* lin_layer_2 = new LinearLayer("linear_layer_2", nn_utils::Shape(20, 20));
+		LinearLayer* lin_layer_1 = new LinearLayer("linear_layer_1", Shape(10, 10));
+		LinearLayer* lin_layer_2 = new LinearLayer("linear_layer_2", Shape(20, 20));
 		ReLUActivation* relu_activation_1 = new ReLUActivation("relu_activation_1");
 		ReLUActivation* relu_activation_2 = new ReLUActivation("relu_activation_2");
 
@@ -48,14 +49,14 @@ namespace {
 
 	TEST_F(NeuralNetworkTest, ShouldPerformForwardProp) {
 		// given
-		X.shape = nn_utils::Shape(10, 20);
+		X.shape = Shape(10, 20);
 		X.allocateCudaMemory();
 
-		nn_utils::Shape output_shape(X.shape.x, 5);
+		Shape output_shape(X.shape.x, 5);
 
-		LinearLayer* linear_layer_1 = new LinearLayer("linear_layer_1", nn_utils::Shape(X.shape.y, 4));
+		LinearLayer* linear_layer_1 = new LinearLayer("linear_layer_1", Shape(X.shape.y, 4));
 		ReLUActivation* relu_layer = new ReLUActivation("relu_layer");
-		LinearLayer* linear_layer_2 = new LinearLayer("linear_layer_2", nn_utils::Shape(4, output_shape.y));
+		LinearLayer* linear_layer_2 = new LinearLayer("linear_layer_2", Shape(4, output_shape.y));
 
 		X.allocateHostMemory();
 		linear_layer_1->W.allocateHostMemory();
@@ -73,7 +74,7 @@ namespace {
 		neural_network.addLayer(linear_layer_1);
 		neural_network.addLayer(relu_layer);
 		neural_network.addLayer(linear_layer_2);
-		nn_utils::Tensor3D Y = neural_network.forward(X);
+		Matrix Y = neural_network.forward(X);
 
 		Y.allocateHostMemory();
 		Y.copyDeviceToHost();

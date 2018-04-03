@@ -7,7 +7,7 @@
 
 namespace testutils {
 
-	void initializeTensorWithValue(nn_utils::Tensor3D M, float value) {
+	void initializeTensorWithValue(Matrix M, float value) {
 		for (int x = 0; x < M.shape.x; x++) {
 			for (int y = 0; y < M.shape.y; y++) {
 				M[y * M.shape.x + x] = value;
@@ -15,7 +15,7 @@ namespace testutils {
 		}
 	}
 
-	void initializeTensorRandomlyInRange(nn_utils::Tensor3D M, float min, float max) {
+	void initializeTensorRandomlyInRange(Matrix M, float min, float max) {
 		srand( time(NULL) );
 		for (int x = 0; x < M.shape.x; x++) {
 			for (int y = 0; y < M.shape.y; y++) {
@@ -24,7 +24,7 @@ namespace testutils {
 		}
 	}
 
-	void initializeEachTensorRowWithValue(nn_utils::Tensor3D M, std::vector<float> values) {
+	void initializeEachTensorRowWithValue(Matrix M, std::vector<float> values) {
 		assert(M.shape.y == values.size());
 
 		for (int x = 0; x < M.shape.x; x++) {
@@ -34,7 +34,7 @@ namespace testutils {
 		}
 	}
 
-	void initializeEachTensorColWithValue(nn_utils::Tensor3D M, std::vector<float> values) {
+	void initializeEachTensorColWithValue(Matrix M, std::vector<float> values) {
 		assert(M.shape.x == values.size());
 
 		for (int x = 0; x < M.shape.x; x++) {

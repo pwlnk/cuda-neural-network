@@ -33,6 +33,7 @@
 								<option id="nvcc.compiler.pic.898671580" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
 								<option id="nvcc.compiler.deviceDebug.784045702" name="Generate device debug information (-G)" superClass="nvcc.compiler.deviceDebug" value="true" valueType="boolean"/>
 								<option id="nvcc.compiler.option.level.472971924" name="Generate host debug information (-g)" superClass="nvcc.compiler.option.level" value="true" valueType="boolean"/>
+								<option id="nvcc.compiler.include.paths.110934076" name="Include paths (-I)" superClass="nvcc.compiler.include.paths" valueType="includePath"/>
 								<inputType id="nvcc.compiler.input.cu.1178455797" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.2106750074" superClass="nvcc.compiler.input.cpp"/>
 								<inputType id="nvcc.compiler.input.c.1967867306" superClass="nvcc.compiler.input.c"/>

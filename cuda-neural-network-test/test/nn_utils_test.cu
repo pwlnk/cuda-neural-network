@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "test_utils.hh"
-#include "nn_utils.hh"
+#include "nn_utils/nn_utils.hh"
+#include "nn_utils/matrix.hh"
 
 #include <iostream>
 
@@ -9,15 +10,15 @@ namespace {
 	class NNUtilsTest : public ::testing::Test {
 	protected:
 
-		nn_utils::Tensor3D target;
-		nn_utils::Tensor3D predictions;
+		Matrix target;
+		Matrix predictions;
 
 		virtual void SetUp() {
-			target.shape = nn_utils::Shape(100, 1);
+			target.shape = Shape(100, 1);
 			target.allocateCudaMemory();
 			target.allocateHostMemory();
 
-			predictions.shape = nn_utils::Shape(100, 1);
+			predictions.shape = Shape(100, 1);
 			predictions.allocateCudaMemory();
 			predictions.allocateHostMemory();
 		}
@@ -50,7 +51,7 @@ namespace {
 		testutils::initializeTensorWithValue(predictions, 0.0001);
 		testutils::initializeTensorWithValue(target, 1);
 
-		nn_utils::Tensor3D dY(predictions.shape);
+		Matrix dY(predictions.shape);
 		dY.allocateCudaMemory();
 
 		predictions.copyHostToDevice();
@@ -59,7 +60,7 @@ namespace {
 		float expected_derivative = (0.0001 - 1) / ((1 - 0.0001) * 0.0001);
 
 		// when
-		nn_utils::Tensor3D d_cross_entropy_loss = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
+		Matrix d_cross_entropy_loss = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
 
 		d_cross_entropy_loss.allocateHostMemory();
 		d_cross_entropy_loss.copyDeviceToHost();

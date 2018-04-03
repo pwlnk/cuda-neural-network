@@ -1,5 +1,5 @@
 #include "sigmoid_activation.hh"
-#include "nn_utils.hh"
+#include "nn_utils/nn_utils.hh"
 #include <iostream>
 
 __device__ float sigmoid(float x) {
@@ -34,7 +34,7 @@ SigmoidActivation::~SigmoidActivation() {
 	dZ.freeCudaAndHostMemory();
 }
 
-nn_utils::Tensor3D SigmoidActivation::forward(nn_utils::Tensor3D Z) {
+Matrix SigmoidActivation::forward(Matrix Z) {
 
 	this->Z = Z;
 	A.allocateIfNotAllocated(Z.shape);
@@ -50,7 +50,7 @@ nn_utils::Tensor3D SigmoidActivation::forward(nn_utils::Tensor3D Z) {
 	return A;
 }
 
-nn_utils::Tensor3D SigmoidActivation::backprop(nn_utils::Tensor3D dA, float learning_rate) {
+Matrix SigmoidActivation::backprop(Matrix dA, float learning_rate) {
 
 	dZ.allocateIfNotAllocated(Z.shape);
 

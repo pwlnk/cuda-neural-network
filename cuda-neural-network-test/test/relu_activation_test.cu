@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "relu_activation.hh"
 #include "test_utils.hh"
+#include "nn_utils/matrix.hh"
 
 #include <iostream>
 #include <exception>
@@ -10,7 +11,7 @@ namespace {
 	class ReLUActivationTest : public ::testing::Test {
 	protected:
 		ReLUActivation relu_layer;
-		nn_utils::Tensor3D Z;
+		Matrix Z;
 
 		ReLUActivationTest() :
 			relu_layer("some_relu_layer")
@@ -41,7 +42,7 @@ namespace {
 		Z.copyHostToDevice();
 
 		// when
-		nn_utils::Tensor3D A = relu_layer.forward(Z);
+		Matrix A = relu_layer.forward(Z);
 
 		A.allocateHostMemory();
 		A.copyDeviceToHost();
@@ -79,7 +80,7 @@ namespace {
 		}
 		Z.copyHostToDevice();
 
-		nn_utils::Tensor3D dA(10, 5);
+		Matrix dA(10, 5);
 		dA.allocateCudaMemory();
 		dA.allocateHostMemory();
 
@@ -87,8 +88,8 @@ namespace {
 		dA.copyHostToDevice();
 
 		// when
-		nn_utils::Tensor3D A = relu_layer.forward(Z);
-		nn_utils::Tensor3D dZ = relu_layer.backprop(dA);
+		Matrix A = relu_layer.forward(Z);
+		Matrix dZ = relu_layer.backprop(dA);
 
 		dZ.allocateHostMemory();
 		dZ.copyDeviceToHost();

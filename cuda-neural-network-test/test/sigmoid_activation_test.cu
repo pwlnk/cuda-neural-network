@@ -1,7 +1,8 @@
 #include "gtest/gtest.h"
 #include "sigmoid_activation.hh"
 #include "test_utils.hh"
-#include "nn_exception.hh"
+#include "nn_utils/nn_exception.hh"
+#include "nn_utils/matrix.hh"
 
 #include <iostream>
 
@@ -10,7 +11,7 @@ namespace {
 	class SigmoidActivationTest : public ::testing::Test {
 	protected:
 		SigmoidActivation sigmoid_layer;
-		nn_utils::Tensor3D Z;
+		Matrix Z;
 
 		SigmoidActivationTest() :
 			sigmoid_layer("some_sigmoid_layer")
@@ -41,7 +42,7 @@ namespace {
 		Z.copyHostToDevice();
 
 		// when
-		nn_utils::Tensor3D A = sigmoid_layer.forward(Z);
+		Matrix A = sigmoid_layer.forward(Z);
 
 		A.allocateHostMemory();
 		A.copyDeviceToHost();
@@ -69,7 +70,7 @@ namespace {
 		testutils::initializeTensorWithValue(Z, 3);
 		Z.copyHostToDevice();
 
-		nn_utils::Tensor3D dA(10, 5);
+		Matrix dA(10, 5);
 		dA.allocateCudaMemory();
 		dA.allocateHostMemory();
 
@@ -79,8 +80,8 @@ namespace {
 		float expected_dZ = 2 * testutils::sigmoid(3) * (1 - testutils::sigmoid(3));
 
 		// when
-		nn_utils::Tensor3D A = sigmoid_layer.forward(Z);
-		nn_utils::Tensor3D dZ = sigmoid_layer.backprop(dA);
+		Matrix A = sigmoid_layer.forward(Z);
+		Matrix dZ = sigmoid_layer.backprop(dA);
 
 		dZ.allocateHostMemory();
 		dZ.copyDeviceToHost();

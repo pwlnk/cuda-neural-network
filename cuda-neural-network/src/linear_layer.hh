@@ -15,12 +15,12 @@ class LinearLayer : public NNLayer {
 private:
 	const float weights_init_threshold = 0.01;
 
-	nn_utils::Tensor3D W;
-	nn_utils::Tensor3D b;
+	Matrix W;
+	Matrix b;
 
-	nn_utils::Tensor3D Z;
-	nn_utils::Tensor3D A;
-	nn_utils::Tensor3D dA;
+	Matrix Z;
+	Matrix A;
+	Matrix dA;
 
 	void initializeBiasWithZeros();
 	void initializeWeightsRandomly();
@@ -33,14 +33,14 @@ private:
 	friend class LinearLayerTest_ShouldUptadeItsWeightsDuringBackprop_Test;
 
 public:
-	LinearLayer(std::string name, nn_utils::Shape W_shape);
+	LinearLayer(std::string name, Shape W_shape);
 	~LinearLayer();
 
-	nn_utils::Tensor3D forward(nn_utils::Tensor3D A);
-	nn_utils::Tensor3D backprop(nn_utils::Tensor3D dZ, float learning_rate = 0.01);
+	Matrix forward(Matrix A);
+	Matrix backprop(Matrix dZ, float learning_rate = 0.01);
 
 	int getXDim() const;
 	int getYDim() const;
-	nn_utils::Tensor3D getWeightsMatrix() const;
-	nn_utils::Tensor3D getBiasVector() const;
+	Matrix getWeightsMatrix() const;
+	Matrix getBiasVector() const;
 };

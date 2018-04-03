@@ -6,7 +6,7 @@
 #include "linear_layer.hh"
 #include "relu_activation.hh"
 #include "sigmoid_activation.hh"
-#include "nn_exception.hh"
+#include "nn_utils/nn_exception.hh"
 
 #include "coordinates_dataset.hh"
 
@@ -17,12 +17,12 @@ int main() {
 	CoordinatesDataset dataset(100, 20);
 
 	NeuralNetwork nn;
-	nn.addLayer(new LinearLayer("linear_1", nn_utils::Shape(2, 100)));
+	nn.addLayer(new LinearLayer("linear_1", Shape(2, 100)));
 	nn.addLayer(new ReLUActivation("relu_1"));
-	nn.addLayer(new LinearLayer("linear_2", nn_utils::Shape(100, 1)));
+	nn.addLayer(new LinearLayer("linear_2", Shape(100, 1)));
 	nn.addLayer(new SigmoidActivation("sigmoid_output"));
 
-	nn_utils::Tensor3D Y;
+	Matrix Y;
 
 	for (int epoch = 0; epoch < 401; epoch++) {
 		float cost = 0.0;

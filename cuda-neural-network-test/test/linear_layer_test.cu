@@ -4,21 +4,22 @@
 #include "gtest/gtest.h"
 #include "test_utils.hh"
 #include "linear_layer.hh"
-#include "nn_utils.hh"
+#include "nn_utils/nn_utils.hh"
+#include "nn_utils/matrix.hh"
 
 namespace {
 
 	class LinearLayerTest : public ::testing::Test {
 	protected:
 		LinearLayer linear_layer;
-		nn_utils::Shape W_shape = nn_utils::Shape(2, 4);
+		Shape W_shape = Shape(2, 4);
 
-		nn_utils::Tensor3D A;
-		nn_utils::Tensor3D dZ;
+		Matrix A;
+		Matrix dZ;
 
 		LinearLayerTest() :
-			A(nn_utils::Shape(3, 2)), dZ(nn_utils::Shape(3, 4)),
-			linear_layer("some_linear_layer", nn_utils::Shape(2, 4))
+			A(Shape(3, 2)), dZ(Shape(3, 4)),
+			linear_layer("some_linear_layer", Shape(2, 4))
 		{
 			A.allocateCudaMemory();
 			A.allocateHostMemory();
@@ -56,7 +57,7 @@ namespace {
 	TEST_F(LinearLayerTest, ShouldHaveInitializedBiasVectorWithZeros) {
 		// given
 		// when
-		nn_utils::Tensor3D b = linear_layer.getBiasVector();
+		Matrix b = linear_layer.getBiasVector();
 
 		b.allocateHostMemory();
 		b.copyDeviceToHost();
@@ -72,7 +73,7 @@ namespace {
 	TEST_F(LinearLayerTest, ShouldHaveWeightsInitializedRandomly) {
 		// given
 		// when
-		nn_utils::Tensor3D W = linear_layer.getWeightsMatrix();
+		Matrix W = linear_layer.getWeightsMatrix();
 
 		W.allocateHostMemory();
 		W.copyDeviceToHost();
@@ -105,7 +106,7 @@ namespace {
 		A.copyHostToDevice();
 
 		// when
-		nn_utils::Tensor3D Z = linear_layer.forward(A);
+		Matrix Z = linear_layer.forward(A);
 
 		Z.allocateHostMemory();
 		Z.copyDeviceToHost();
@@ -138,8 +139,8 @@ namespace {
 		dZ.copyHostToDevice();
 
 		// when
-		nn_utils::Tensor3D Z = linear_layer.forward(A);
-		nn_utils::Tensor3D dA = linear_layer.backprop(dZ);
+		Matrix Z = linear_layer.forward(A);
+		Matrix dA = linear_layer.backprop(dZ);
 
 		dA.allocateHostMemory();
 		dA.copyDeviceToHost();
@@ -172,8 +173,8 @@ namespace {
 		dZ.copyHostToDevice();
 
 		// when
-		nn_utils::Tensor3D Z = linear_layer.forward(A);
-		nn_utils::Tensor3D dA = linear_layer.backprop(dZ, learning_rate);
+		Matrix Z = linear_layer.forward(A);
+		Matrix dA = linear_layer.backprop(dZ, learning_rate);
 
 		linear_layer.b.copyDeviceToHost();
 
@@ -204,8 +205,8 @@ namespace {
 		A.copyHostToDevice();
 
 		// when
-		nn_utils::Tensor3D Z = linear_layer.forward(A);
-		nn_utils::Tensor3D dA = linear_layer.backprop(dZ, learning_rate);
+		Matrix Z = linear_layer.forward(A);
+		Matrix dA = linear_layer.backprop(dZ, learning_rate);
 
 		linear_layer.W.copyDeviceToHost();
 

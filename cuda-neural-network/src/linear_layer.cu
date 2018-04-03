@@ -4,8 +4,8 @@
 #include <random>
 
 #include "linear_layer.hh"
-#include "nn_exception.hh"
-#include "nn_utils.hh"
+#include "nn_utils/nn_exception.hh"
+#include "nn_utils/nn_utils.hh"
 
 __global__ void weightedSum(float* W, float* A, float* Z,
 							int W_x_dim, int W_y_dim,
@@ -93,7 +93,7 @@ __global__ void biasGDC(float* dZ, float* b,
 	}
 }
 
-LinearLayer::LinearLayer(std::string name, nn_utils::Shape W_shape) :
+LinearLayer::LinearLayer(std::string name, Shape W_shape) :
 	W(W_shape), b(W_shape.y, 1)
 {
 	this->name = name;
@@ -140,11 +140,11 @@ LinearLayer::~LinearLayer() {
 	dA.freeCudaAndHostMemory();
 }
 
-nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
+Matrix LinearLayer::forward(Matrix A) {
 	assert(W.shape.x == A.shape.y);
 
 	this->A = A;
-	Z.allocateIfNotAllocated(nn_utils::Shape(A.shape.x, W.shape.y));
+	Z.allocateIfNotAllocated(Shape(A.shape.x, W.shape.y));
 
 	dim3 block_size(4, 4);
 	dim3 num_of_blocks(	(Z.shape.x + block_size.x - 1) / block_size.x,
@@ -165,7 +165,7 @@ nn_utils::Tensor3D LinearLayer::forward(nn_utils::Tensor3D A) {
 	return Z;
 }
 
-nn_utils::Tensor3D LinearLayer::backprop(nn_utils::Tensor3D dZ, float learning_rate) {
+Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 
 	dA.allocateIfNotAllocated(A.shape);
 
@@ -211,10 +211,10 @@ int LinearLayer::getYDim() const {
 	return W.shape.y;
 }
 
-nn_utils::Tensor3D LinearLayer::getWeightsMatrix() const {
+Matrix LinearLayer::getWeightsMatrix() const {
 	return W;
 }
 
-nn_utils::Tensor3D LinearLayer::getBiasVector() const {
+Matrix LinearLayer::getBiasVector() const {
 	return b;
 }

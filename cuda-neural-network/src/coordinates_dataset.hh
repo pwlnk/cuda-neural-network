@@ -1,6 +1,7 @@
 #pragma once
 
-#include "nn_utils.hh"
+#include "nn_utils/nn_utils.hh"
+#include "nn_utils/matrix.hh"
 
 #include <vector>
 
@@ -9,15 +10,15 @@ private:
 	size_t batch_size;
 	size_t number_of_batches;
 
-	std::vector<nn_utils::Tensor3D> batches;
-	std::vector<nn_utils::Tensor3D> targets;
+	std::vector<Matrix> batches;
+	std::vector<Matrix> targets;
 
 public:
 
 	CoordinatesDataset(size_t batch_size, size_t number_of_batches);
 
 	int getNumOfBatches();
-	std::vector<nn_utils::Tensor3D>& getBatches();
-	std::vector<nn_utils::Tensor3D>& getTargets();
+	std::vector<Matrix>& getBatches();
+	std::vector<Matrix>& getTargets();
 
 };
