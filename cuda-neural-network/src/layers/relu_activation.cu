@@ -29,21 +29,18 @@ ReLUActivation::ReLUActivation(std::string name)
 	this->name = name;
 }
 
-ReLUActivation::~ReLUActivation() {
-	A.freeCudaAndHostMemory();
-	dZ.freeCudaAndHostMemory();
-}
+ReLUActivation::~ReLUActivation() { }
 
 Matrix ReLUActivation::forward(Matrix Z) {
 
 	this->Z = Z;
 
-	A.allocateIfNotAllocated(Z.shape);
+	A.allocateMemoryIfNotAllocated(Z.shape);
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);
 
-	relu_activation_forward<<<num_of_blocks, block_size>>>(Z.data_device, A.data_device,
+	relu_activation_forward<<<num_of_blocks, block_size>>>(Z.data_device.get(), A.data_device.get(),
 														   Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
 	NNException::throwIfDeviceErrorsOccurred("Cannot perform ReLU forward prop.");
@@ -53,11 +50,12 @@ Matrix ReLUActivation::forward(Matrix Z) {
 
 Matrix ReLUActivation::backprop(Matrix dA, float learning_rate) {
 
-	dZ.allocateIfNotAllocated(Z.shape);
+	dZ.allocateMemoryIfNotAllocated(Z.shape);
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x);
-	relu_activation_backprop<<<num_of_blocks, block_size>>>(Z.data_device, dA.data_device, dZ.data_device,
+	relu_activation_backprop<<<num_of_blocks, block_size>>>(Z.data_device.get(), dA.data_device.get(),
+															dZ.data_device.get(),
 															Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
 	NNException::throwIfDeviceErrorsOccurred("Cannot perform relu backprop");

@@ -7,11 +7,8 @@ CoordinatesDataset::CoordinatesDataset(size_t batch_size, size_t number_of_batch
 		batches.push_back(Matrix(Shape(batch_size, 2)));
 		targets.push_back(Matrix(Shape(batch_size, 1)));
 
-		batches[i].allocateCudaMemory();
-		batches[i].allocateHostMemory();
-
-		targets[i].allocateCudaMemory();
-		targets[i].allocateHostMemory();
+		batches[i].allocateMemory();
+		targets[i].allocateMemory();
 
 		for (int k = 0; k < batch_size; k++) {
 			batches[i][k] = static_cast<float>(rand()) / RAND_MAX - 0.5;

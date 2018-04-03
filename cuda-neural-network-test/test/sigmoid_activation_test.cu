@@ -16,10 +16,6 @@ namespace {
 		SigmoidActivationTest() :
 			sigmoid_layer("some_sigmoid_layer")
 		{ }
-
-		virtual void TearDown() {
-			Z.freeCudaAndHostMemory();
-		}
 	};
 
 	TEST_F(SigmoidActivationTest, ShouldHaveName) {
@@ -35,16 +31,13 @@ namespace {
 		// given
 		Z.shape.x = 20;
 		Z.shape.y = 10;
-		Z.allocateCudaMemory();
-		Z.allocateHostMemory();
+		Z.allocateMemory();
 
 		testutils::initializeTensorRandomlyInRange(Z, -10, 10);
 		Z.copyHostToDevice();
 
 		// when
 		Matrix A = sigmoid_layer.forward(Z);
-
-		A.allocateHostMemory();
 		A.copyDeviceToHost();
 
 		// then
@@ -64,15 +57,13 @@ namespace {
 		// given
 		Z.shape.x = 10;
 		Z.shape.y = 5;
-		Z.allocateCudaMemory();
-		Z.allocateHostMemory();
+		Z.allocateMemory();
 
 		testutils::initializeTensorWithValue(Z, 3);
 		Z.copyHostToDevice();
 
 		Matrix dA(10, 5);
-		dA.allocateCudaMemory();
-		dA.allocateHostMemory();
+		dA.allocateMemory();
 
 		testutils::initializeTensorWithValue(dA, 2);
 		dA.copyHostToDevice();
@@ -82,8 +73,6 @@ namespace {
 		// when
 		Matrix A = sigmoid_layer.forward(Z);
 		Matrix dZ = sigmoid_layer.backprop(dA);
-
-		dZ.allocateHostMemory();
 		dZ.copyDeviceToHost();
 
 		// then
@@ -95,9 +84,6 @@ namespace {
 				ASSERT_EQ(dZ[dZ_y * dZ.shape.x + dZ_x], expected_dZ);
 			}
 		}
-
-		// clean up
-		dA.freeCudaAndHostMemory();
 	}
 
 }

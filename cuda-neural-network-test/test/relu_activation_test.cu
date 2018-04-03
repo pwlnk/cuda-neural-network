@@ -16,10 +16,6 @@ namespace {
 		ReLUActivationTest() :
 			relu_layer("some_relu_layer")
 		{ }
-
-		virtual void TearDown() {
-			Z.freeCudaAndHostMemory();
-		}
 	};
 
 	TEST_F(ReLUActivationTest, ShouldHaveName) {
@@ -35,16 +31,13 @@ namespace {
 		// given
 		Z.shape.x = 20;
 		Z.shape.y = 10;
-		Z.allocateCudaMemory();
-		Z.allocateHostMemory();
+		Z.allocateMemory();
 
 		testutils::initializeTensorRandomlyInRange(Z, -10, 10);
 		Z.copyHostToDevice();
 
 		// when
 		Matrix A = relu_layer.forward(Z);
-
-		A.allocateHostMemory();
 		A.copyDeviceToHost();
 
 		// then
@@ -65,8 +58,7 @@ namespace {
 		// given
 		Z.shape.x = 10;
 		Z.shape.y = 5;
-		Z.allocateCudaMemory();
-		Z.allocateHostMemory();
+		Z.allocateMemory();
 
 		for (int i = 0; i < Z.shape.x; i++) {
 			for (int j = 0; j < Z.shape.y; j++) {
@@ -81,8 +73,7 @@ namespace {
 		Z.copyHostToDevice();
 
 		Matrix dA(10, 5);
-		dA.allocateCudaMemory();
-		dA.allocateHostMemory();
+		dA.allocateMemory();
 
 		testutils::initializeTensorWithValue(dA, 2);
 		dA.copyHostToDevice();
@@ -90,8 +81,6 @@ namespace {
 		// when
 		Matrix A = relu_layer.forward(Z);
 		Matrix dZ = relu_layer.backprop(dA);
-
-		dZ.allocateHostMemory();
 		dZ.copyDeviceToHost();
 
 		// then

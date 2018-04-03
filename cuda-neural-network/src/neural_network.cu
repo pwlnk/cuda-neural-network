@@ -10,8 +10,6 @@ NeuralNetwork::~NeuralNetwork() {
 	for (std::vector<NNLayer*>::iterator it = this->layers.begin(); it != this->layers.end(); it++) {
 		delete *it;
 	}
-
-	dY.freeCudaAndHostMemory();
 }
 
 void NeuralNetwork::addLayer(NNLayer* layer) {
@@ -31,7 +29,7 @@ Matrix NeuralNetwork::forward(Matrix X) {
 
 void NeuralNetwork::backprop(Matrix predictions, Matrix target) {
 
-	dY.allocateIfNotAllocated(predictions.shape);
+	dY.allocateMemoryIfNotAllocated(predictions.shape);
 
 	Matrix err = bce_cost.dCost(predictions, target, dY);
 

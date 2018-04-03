@@ -34,8 +34,9 @@ float BCECost::cost(Matrix predictions, Matrix target) {
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
-	cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device, target.data_device,
-															  predictions.shape.x, cost);
+	cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device.get(),
+													  target.data_device.get(),
+													  predictions.shape.x, cost);
 	cudaDeviceSynchronize();
 	NNException::throwIfDeviceErrorsOccurred("Cannot compute binary cross entropy cost.");
 
@@ -50,7 +51,9 @@ Matrix BCECost::dCost(Matrix predictions, Matrix target, Matrix dY) {
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
-	d_cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device, target.data_device, dY.data_device,
+	d_cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device.get(),
+														target.data_device.get(),
+														dY.data_device.get(),
 														predictions.shape.x);
 	cudaDeviceSynchronize();
 	NNException::throwIfDeviceErrorsOccurred("Cannot compute derivative for binary cross entropy.");

@@ -20,16 +20,8 @@ namespace {
 			A(Shape(3, 2)), dZ(Shape(3, 4)),
 			linear_layer("some_linear_layer", Shape(2, 4))
 		{
-			A.allocateCudaMemory();
-			A.allocateHostMemory();
-
-			dZ.allocateCudaMemory();
-			dZ.allocateHostMemory();
-		}
-
-		virtual void TearDown() {
-			A.freeCudaAndHostMemory();
-			dZ.freeCudaAndHostMemory();
+			A.allocateMemory();
+			dZ.allocateMemory();
 		}
 	};
 
@@ -57,8 +49,6 @@ namespace {
 		// given
 		// when
 		Matrix b = linear_layer.getBiasVector();
-
-		b.allocateHostMemory();
 		b.copyDeviceToHost();
 
 		// then
@@ -73,8 +63,6 @@ namespace {
 		// given
 		// when
 		Matrix W = linear_layer.getWeightsMatrix();
-
-		W.allocateHostMemory();
 		W.copyDeviceToHost();
 
 		// then
@@ -93,9 +81,6 @@ namespace {
 		std::vector<float> W_rows_values = {2, 4, 6, 8};
 		std::vector<float> A_cols_values = {3, 5, 7};
 
-		linear_layer.W.allocateHostMemory();
-		linear_layer.b.allocateHostMemory();
-
 		testutils::initializeEachTensorRowWithValue(linear_layer.W, W_rows_values);
 		testutils::initializeEachTensorColWithValue(linear_layer.b, b_cols_values);
 		testutils::initializeEachTensorColWithValue(A, A_cols_values);
@@ -106,8 +91,6 @@ namespace {
 
 		// when
 		Matrix Z = linear_layer.forward(A);
-
-		Z.allocateHostMemory();
 		Z.copyDeviceToHost();
 
 		// then
@@ -129,8 +112,6 @@ namespace {
 		std::vector<float> W_cols_values = {6, 8};
 		std::vector<float> dZ_cols_values = {3, 5, 7};
 
-		linear_layer.W.allocateHostMemory();
-
 		testutils::initializeEachTensorColWithValue(linear_layer.W, W_cols_values);
 		testutils::initializeEachTensorColWithValue(dZ, dZ_cols_values);
 
@@ -140,8 +121,6 @@ namespace {
 		// when
 		Matrix Z = linear_layer.forward(A);
 		Matrix dA = linear_layer.backprop(dZ);
-
-		dA.allocateHostMemory();
 		dA.copyDeviceToHost();
 
 		// then
@@ -162,8 +141,6 @@ namespace {
 		std::vector<float> b_cols_values = {1, 2, 3, 4};
 		std::vector<float> dZ_rows_values = {3, 5, 7, 9};
 		float learning_rate = 0.1;
-
-		linear_layer.b.allocateHostMemory();
 
 		testutils::initializeEachTensorColWithValue(linear_layer.b, b_cols_values);
 		testutils::initializeEachTensorRowWithValue(dZ, dZ_rows_values);
@@ -192,8 +169,6 @@ namespace {
 		std::vector<float> dZ_rows_values = {3, 5, 7, 9};
 		std::vector<float> A_rows_values = {2, 4};
 		float learning_rate = 0.1;
-
-		linear_layer.W.allocateHostMemory();
 
 		testutils::initializeEachTensorColWithValue(linear_layer.W, W_cols_values);
 		testutils::initializeEachTensorRowWithValue(dZ, dZ_rows_values);

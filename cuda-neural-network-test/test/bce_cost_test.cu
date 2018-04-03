@@ -9,7 +9,6 @@ namespace {
 
 	class BCECostTest : public ::testing::Test {
 	protected:
-
 		BCECost bce_cost;
 
 		Matrix target;
@@ -17,19 +16,11 @@ namespace {
 
 		virtual void SetUp() {
 			target.shape = Shape(100, 1);
-			target.allocateCudaMemory();
-			target.allocateHostMemory();
+			target.allocateMemory();
 
 			predictions.shape = Shape(100, 1);
-			predictions.allocateCudaMemory();
-			predictions.allocateHostMemory();
+			predictions.allocateMemory();
 		}
-
-		virtual void TearDown() {
-			target.freeCudaAndHostMemory();
-			predictions.freeCudaAndHostMemory();
-		}
-
 	};
 
 	TEST_F(BCECostTest, ShouldCalculateBinaryCrossEntropyLoss) {
@@ -54,7 +45,7 @@ namespace {
 		testutils::initializeTensorWithValue(target, 1);
 
 		Matrix dY(predictions.shape);
-		dY.allocateCudaMemory();
+		dY.allocateMemory();
 
 		predictions.copyHostToDevice();
 		target.copyHostToDevice();
@@ -63,16 +54,12 @@ namespace {
 
 		// when
 		Matrix d_cross_entropy_loss = bce_cost.dCost(predictions, target, dY);
-
-		d_cross_entropy_loss.allocateHostMemory();
 		d_cross_entropy_loss.copyDeviceToHost();
 
 		// then
 		for (int i = 0; i < predictions.shape.x; i++) {
 			ASSERT_NEAR(d_cross_entropy_loss[i], expected_derivative, 0.00001);
 		}
-
-		dY.freeCudaAndHostMemory();
 	}
 
 }

@@ -17,12 +17,6 @@ namespace {
 		Matrix X;
 		Matrix predictions;
 		Matrix target;
-
-		virtual void TearDown() {
-			X.freeCudaAndHostMemory();
-			predictions.freeCudaAndHostMemory();
-			target.freeCudaAndHostMemory();
-		}
 	};
 
 	TEST_F(NeuralNetworkTest, ShouldStoreAddedLayersInOrder) {
@@ -50,17 +44,13 @@ namespace {
 	TEST_F(NeuralNetworkTest, ShouldPerformForwardProp) {
 		// given
 		X.shape = Shape(10, 20);
-		X.allocateCudaMemory();
+		X.allocateMemory();
 
 		Shape output_shape(X.shape.x, 5);
 
 		LinearLayer* linear_layer_1 = new LinearLayer("linear_layer_1", Shape(X.shape.y, 4));
 		ReLUActivation* relu_layer = new ReLUActivation("relu_layer");
 		LinearLayer* linear_layer_2 = new LinearLayer("linear_layer_2", Shape(4, output_shape.y));
-
-		X.allocateHostMemory();
-		linear_layer_1->W.allocateHostMemory();
-		linear_layer_2->W.allocateHostMemory();
 
 		testutils::initializeTensorWithValue(X, 4);
 		testutils::initializeTensorWithValue(linear_layer_1->W, 2);
@@ -75,8 +65,6 @@ namespace {
 		neural_network.addLayer(relu_layer);
 		neural_network.addLayer(linear_layer_2);
 		Matrix Y = neural_network.forward(X);
-
-		Y.allocateHostMemory();
 		Y.copyDeviceToHost();
 
 		// then

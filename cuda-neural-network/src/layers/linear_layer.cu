@@ -96,18 +96,15 @@ LinearLayer::LinearLayer(std::string name, Shape W_shape) :
 	W(W_shape), b(W_shape.y, 1)
 {
 	this->name = name;
-	b.allocateCudaMemory();
-	NNException::throwIfDeviceErrorsOccurred("Cannot initialize layer bias.");
-	W.allocateCudaMemory();
-	NNException::throwIfDeviceErrorsOccurred("Cannot initialize layer weights.");
-
+	b.allocateMemory();
+	W.allocateMemory();
 	initializeBiasWithZeros();
 	initializeWeightsRandomly();
 }
 
-void LinearLayer::initializeWeightsRandomly() {
-	W.allocateHostMemory();
+LinearLayer::~LinearLayer() { }
 
+void LinearLayer::initializeWeightsRandomly() {
 	std::default_random_engine generator;
 	std::normal_distribution<float> normal_distribution(0.0, 1.0);
 
@@ -118,37 +115,27 @@ void LinearLayer::initializeWeightsRandomly() {
 	}
 
 	W.copyHostToDevice();
-	W.freeHostMemory();
 }
 
 void LinearLayer::initializeBiasWithZeros() {
-	b.allocateHostMemory();
-
 	for (int x = 0; x < b.shape.x; x++) {
 		b[x] = 0;
 	}
 
 	b.copyHostToDevice();
-	b.freeHostMemory();
-}
-
-LinearLayer::~LinearLayer() {
-	W.freeCudaAndHostMemory();
-	b.freeCudaAndHostMemory();
-	Z.freeCudaAndHostMemory();
-	dA.freeCudaAndHostMemory();
 }
 
 Matrix LinearLayer::forward(Matrix A) {
 	assert(W.shape.x == A.shape.y);
 
 	this->A = A;
-	Z.allocateIfNotAllocated(Shape(A.shape.x, W.shape.y));
+	Z.allocateMemoryIfNotAllocated(Shape(A.shape.x, W.shape.y));
 
 	dim3 block_size(4, 4);
 	dim3 num_of_blocks(	(Z.shape.x + block_size.x - 1) / block_size.x,
 						(Z.shape.y + block_size.y - 1) / block_size.y);
-	weightedSum<<<num_of_blocks, block_size>>>(W.data_device, A.data_device, Z.data_device,
+	weightedSum<<<num_of_blocks, block_size>>>(W.data_device.get(),
+											   A.data_device.get(), Z.data_device.get(),
 											   W.shape.x, W.shape.y,
 											   A.shape.x, A.shape.y);
 	cudaDeviceSynchronize();
@@ -157,7 +144,8 @@ Matrix LinearLayer::forward(Matrix A) {
 	block_size.x = 256; block_size.y = 1;
 	num_of_blocks.x = (Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x;
 	num_of_blocks.y = 1;
-	addBias<<<num_of_blocks, block_size>>>(Z.data_device, b.data_device, Z.shape.x, Z.shape.y);
+	addBias<<<num_of_blocks, block_size>>>(Z.data_device.get(), b.data_device.get(),
+										   Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
 	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
@@ -166,13 +154,14 @@ Matrix LinearLayer::forward(Matrix A) {
 
 Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 
-	dA.allocateIfNotAllocated(A.shape);
+	dA.allocateMemoryIfNotAllocated(A.shape);
 
 	// compute dA
 	dim3 block_size(8, 8);
 	dim3 num_of_blocks(	(A.shape.x + block_size.x - 1) / block_size.x,
 						(A.shape.y + block_size.y - 1) / block_size.y);
-	linearLayerBackprop<<<num_of_blocks, block_size>>>(W.data_device, dZ.data_device, dA.data_device,
+	linearLayerBackprop<<<num_of_blocks, block_size>>>(W.data_device.get(), dZ.data_device.get(),
+														dA.data_device.get(),
 														W.shape.x, W.shape.y,
 														dZ.shape.x, dZ.shape.y);
 	cudaDeviceSynchronize(); // TODO: probably some syncs can be removed
@@ -182,7 +171,7 @@ Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 	block_size.x = 256; block_size.y = 1;
 	num_of_blocks.x = (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x;
 	num_of_blocks.y = 1;
-	biasGDC<<<num_of_blocks, block_size>>>(dZ.data_device, b.data_device,
+	biasGDC<<<num_of_blocks, block_size>>>(dZ.data_device.get(), b.data_device.get(),
 										   dZ.shape.x, dZ.shape.y,
 										   b.shape.x, learning_rate);
 	cudaDeviceSynchronize();
@@ -192,7 +181,8 @@ Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 	block_size = dim3(16, 16);
 	num_of_blocks = dim3((W.shape.x + block_size.x - 1) / block_size.x,
 						 (W.shape.y + block_size.y - 1) / block_size.y);
-	weightsGDC<<<num_of_blocks, block_size>>>(dZ.data_device, A.data_device, W.data_device,
+	weightsGDC<<<num_of_blocks, block_size>>>(dZ.data_device.get(), A.data_device.get(),
+											  W.data_device.get(),
 											  dZ.shape.x, dZ.shape.y,
 											  A.shape.x, A.shape.y,
 											  learning_rate);
