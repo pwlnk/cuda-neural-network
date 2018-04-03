@@ -69,7 +69,7 @@ namespace {
 		}
 	}
 
-	TEST_F(LinearLayerTest, ShouldHaveWeightsInitializedRandomlyWithNumbersLowerThan0p01) {
+	TEST_F(LinearLayerTest, ShouldHaveWeightsInitializedRandomly) {
 		// given
 		// when
 		nn_utils::Tensor3D W = linear_layer.getWeightsMatrix();
@@ -81,8 +81,6 @@ namespace {
 		float prev_weight_value = -1.0;
 		for (int x = 0; x < W.shape.x; x++) {
 			for (int y = 0; y < W.shape.y; y++) {
-				ASSERT_GE(W[y * W.shape.x + x], 0);
-				ASSERT_LE(W[y * W.shape.x + x], 0.01);
 				ASSERT_NE(W[y * W.shape.x + x], prev_weight_value);
 				prev_weight_value = W[y * W.shape.x + x];
 			}
