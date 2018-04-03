@@ -1,5 +1,4 @@
 #include "relu_activation.hh"
-#include "nn_utils/nn_utils.hh"
 #include "nn_utils/nn_exception.hh"
 
 __global__ void relu_activation_forward(float* Z, float* A,

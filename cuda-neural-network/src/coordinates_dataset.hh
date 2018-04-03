@@ -1,6 +1,5 @@
 #pragma once
 
-#include "nn_utils/nn_utils.hh"
 #include "nn_utils/matrix.hh"
 
 #include <vector>

@@ -7,6 +7,7 @@
 #include "relu_activation.hh"
 #include "sigmoid_activation.hh"
 #include "nn_utils/nn_exception.hh"
+#include "nn_utils/bce_cost.hh"
 
 #include "coordinates_dataset.hh"
 
@@ -15,6 +16,7 @@ int main() {
 	srand( time(NULL) );
 
 	CoordinatesDataset dataset(100, 20);
+	BCECost bce_cost;
 
 	NeuralNetwork nn;
 	nn.addLayer(new LinearLayer("linear_1", Shape(2, 100)));
@@ -30,7 +32,7 @@ int main() {
 		for (int batch = 0; batch < dataset.getNumOfBatches(); batch++) {
 			Y = nn.forward(dataset.getBatches().at(batch));
 			nn.backprop(Y, dataset.getTargets().at(batch));
-			cost += nn_utils::binaryCrossEntropyCost(Y, dataset.getTargets().at(batch));
+			cost += bce_cost.cost(Y, dataset.getTargets().at(batch));
 		}
 
 		if (epoch % 100 == 0) {

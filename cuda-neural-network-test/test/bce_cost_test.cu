@@ -1,14 +1,16 @@
 #include "gtest/gtest.h"
 #include "test_utils.hh"
-#include "nn_utils/nn_utils.hh"
+#include "nn_utils/bce_cost.hh"
 #include "nn_utils/matrix.hh"
 
 #include <iostream>
 
 namespace {
 
-	class NNUtilsTest : public ::testing::Test {
+	class BCECostTest : public ::testing::Test {
 	protected:
+
+		BCECost bce_cost;
 
 		Matrix target;
 		Matrix predictions;
@@ -30,7 +32,7 @@ namespace {
 
 	};
 
-	TEST_F(NNUtilsTest, ShouldCalculateBinaryCrossEntropyLoss) {
+	TEST_F(BCECostTest, ShouldCalculateBinaryCrossEntropyLoss) {
 		// given
 		testutils::initializeTensorWithValue(predictions, 0.0001);
 		testutils::initializeTensorWithValue(target, 1);
@@ -39,14 +41,14 @@ namespace {
 		target.copyHostToDevice();
 
 		// when
-		float cost = nn_utils::binaryCrossEntropyCost(predictions, target);
+		float cost = bce_cost.cost(predictions, target);
 
 		// then
 		ASSERT_NEAR(cost, -log(0.0001), 0.0001);
 	}
 
 
-	TEST_F(NNUtilsTest, ShouldCalculateDerivativeOfBinaryCrossEntropyLoss) {
+	TEST_F(BCECostTest, ShouldCalculateDerivativeOfBinaryCrossEntropyLoss) {
 		// given
 		testutils::initializeTensorWithValue(predictions, 0.0001);
 		testutils::initializeTensorWithValue(target, 1);
@@ -60,7 +62,7 @@ namespace {
 		float expected_derivative = (0.0001 - 1) / ((1 - 0.0001) * 0.0001);
 
 		// when
-		Matrix d_cross_entropy_loss = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
+		Matrix d_cross_entropy_loss = bce_cost.dCost(predictions, target, dY);
 
 		d_cross_entropy_loss.allocateHostMemory();
 		d_cross_entropy_loss.copyDeviceToHost();

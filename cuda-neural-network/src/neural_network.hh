@@ -2,10 +2,12 @@
 
 #include <vector>
 #include "nn_layer.hh"
+#include "nn_utils/bce_cost.hh"
 
 class NeuralNetwork {
 private:
 	std::vector<NNLayer*> layers;
+	BCECost bce_cost;
 
 	Matrix Y;
 	Matrix dY;

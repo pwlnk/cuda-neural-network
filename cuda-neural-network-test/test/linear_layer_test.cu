@@ -4,7 +4,6 @@
 #include "gtest/gtest.h"
 #include "test_utils.hh"
 #include "linear_layer.hh"
-#include "nn_utils/nn_utils.hh"
 #include "nn_utils/matrix.hh"
 
 namespace {

@@ -5,7 +5,6 @@
 
 #include "linear_layer.hh"
 #include "nn_utils/nn_exception.hh"
-#include "nn_utils/nn_utils.hh"
 
 __global__ void weightedSum(float* W, float* A, float* Z,
 							int W_x_dim, int W_y_dim,

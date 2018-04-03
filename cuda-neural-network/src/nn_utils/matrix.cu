@@ -1,5 +1,4 @@
 #include "matrix.hh"
-#include "nn_utils.hh"
 #include "nn_exception.hh"
 
 Matrix::Matrix(size_t x_dim, size_t y_dim) :

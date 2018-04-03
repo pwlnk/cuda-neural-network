@@ -1,6 +1,5 @@
 #include "neural_network.hh"
 #include "nn_utils/nn_exception.hh"
-#include "nn_utils/nn_utils.hh"
 
 #include <iostream>
 
@@ -34,7 +33,7 @@ void NeuralNetwork::backprop(Matrix predictions, Matrix target) {
 
 	dY.allocateIfNotAllocated(predictions.shape);
 
-	Matrix err = nn_utils::dBinaryCrossEntropyCost(predictions, target, dY);
+	Matrix err = bce_cost.dCost(predictions, target, dY);
 
 	for (std::vector<NNLayer*>::reverse_iterator it = this->layers.rbegin(); it != this->layers.rend(); it++) {
 		err = (*it)->backprop(err, 0.01);
