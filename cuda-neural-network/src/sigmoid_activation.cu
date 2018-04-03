@@ -1,5 +1,6 @@
 #include "sigmoid_activation.hh"
 #include "nn_utils/nn_utils.hh"
+#include "nn_utils/nn_exception.hh"
 #include <iostream>
 
 __device__ float sigmoid(float x) {
@@ -45,7 +46,7 @@ Matrix SigmoidActivation::forward(Matrix Z) {
 	sigmoid_activation_forward<<<num_of_blocks, block_size>>>(Z.data_device, A.data_device,
 														   	  Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform sigmoid forward prop.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform sigmoid forward prop.");
 
 	return A;
 }
@@ -59,7 +60,7 @@ Matrix SigmoidActivation::backprop(Matrix dA, float learning_rate) {
 	sigmoid_activation_backprop<<<num_of_blocks, block_size>>>(Z.data_device, dA.data_device, dZ.data_device,
 															   Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform sigmoid backprop");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform sigmoid backprop");
 
 	return dZ;
 }

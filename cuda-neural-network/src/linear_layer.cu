@@ -98,9 +98,9 @@ LinearLayer::LinearLayer(std::string name, Shape W_shape) :
 {
 	this->name = name;
 	b.allocateCudaMemory();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot initialize layer bias.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot initialize layer bias.");
 	W.allocateCudaMemory();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot initialize layer weights.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot initialize layer weights.");
 
 	initializeBiasWithZeros();
 	initializeWeightsRandomly();
@@ -153,14 +153,14 @@ Matrix LinearLayer::forward(Matrix A) {
 											   W.shape.x, W.shape.y,
 											   A.shape.x, A.shape.y);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
 	block_size.x = 256; block_size.y = 1;
 	num_of_blocks.x = (Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x;
 	num_of_blocks.y = 1;
 	addBias<<<num_of_blocks, block_size>>>(Z.data_device, b.data_device, Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
 	return Z;
 }
@@ -177,7 +177,7 @@ Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 														W.shape.x, W.shape.y,
 														dZ.shape.x, dZ.shape.y);
 	cudaDeviceSynchronize(); // TODO: probably some syncs can be removed
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
 
 	// compute db and do GDC
 	block_size.x = 256; block_size.y = 1;
@@ -187,7 +187,7 @@ Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 										   dZ.shape.x, dZ.shape.y,
 										   b.shape.x, learning_rate);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform bias GDC.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform bias GDC.");
 
 	// compute dW and do GDC
 	block_size = dim3(16, 16);
@@ -198,7 +198,7 @@ Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 											  A.shape.x, A.shape.y,
 											  learning_rate);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform weights GDC.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform weights GDC.");
 
 	return dA;
 }

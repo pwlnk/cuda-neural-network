@@ -1,5 +1,6 @@
 #include "relu_activation.hh"
 #include "nn_utils/nn_utils.hh"
+#include "nn_utils/nn_exception.hh"
 
 __global__ void relu_activation_forward(float* Z, float* A,
 									    int Z_x_dim, int Z_y_dim) {
@@ -46,7 +47,7 @@ Matrix ReLUActivation::forward(Matrix Z) {
 	relu_activation_forward<<<num_of_blocks, block_size>>>(Z.data_device, A.data_device,
 														   Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform ReLU forward prop.");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform ReLU forward prop.");
 
 	return A;
 }
@@ -60,7 +61,7 @@ Matrix ReLUActivation::backprop(Matrix dA, float learning_rate) {
 	relu_activation_backprop<<<num_of_blocks, block_size>>>(Z.data_device, dA.data_device, dZ.data_device,
 															Z.shape.x, Z.shape.y);
 	cudaDeviceSynchronize();
-	nn_utils::throwIfDeviceErrorsOccurred("Cannot perform relu backprop");
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform relu backprop");
 
 	return dZ;
 }

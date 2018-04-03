@@ -27,14 +27,6 @@ __global__ void d_cross_entropy_cost(float* predictions, float* target, float* d
 
 namespace nn_utils {
 
-	void throwIfDeviceErrorsOccurred(const char* exception_message) {
-		cudaError_t error = cudaGetLastError();
-		if (error != cudaSuccess) {
-			std::cerr << error << ": " << exception_message;
-			throw NNException(exception_message);
-		}
-	}
-
 	float binaryCrossEntropyCost(Matrix predictions, Matrix target) {
 		assert(predictions.shape.x == target.shape.x);
 
@@ -47,7 +39,7 @@ namespace nn_utils {
 		cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device, target.data_device,
 															      predictions.shape.x, cost);
 		cudaDeviceSynchronize();
-		nn_utils::throwIfDeviceErrorsOccurred("Cannot compute binary cross entropy cost.");
+		NNException::throwIfDeviceErrorsOccurred("Cannot compute binary cross entropy cost.");
 
 		float cost_value = *cost;
 		cudaFree(cost);
@@ -63,7 +55,7 @@ namespace nn_utils {
 		d_cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device, target.data_device, dY.data_device,
 															predictions.shape.x);
 		cudaDeviceSynchronize();
-		nn_utils::throwIfDeviceErrorsOccurred("Cannot compute derivative for binary cross entropy.");
+		NNException::throwIfDeviceErrorsOccurred("Cannot compute derivative for binary cross entropy.");
 
 		return dY;
 	}

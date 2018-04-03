@@ -1,6 +1,7 @@
 #pragma once
 
 #include <exception>
+#include <iostream>
 
 class NNException : std::exception {
 private:
@@ -14,5 +15,13 @@ public:
 	virtual const char* what() const throw()
 	{
 		return exception_message;
+	}
+
+	static void throwIfDeviceErrorsOccurred(const char* exception_message) {
+		cudaError_t error = cudaGetLastError();
+		if (error != cudaSuccess) {
+			std::cerr << error << ": " << exception_message;
+			throw NNException(exception_message);
+		}
 	}
 };
