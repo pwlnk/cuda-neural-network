@@ -1,6 +1,5 @@
 #include <iostream>
 #include <time.h>
-#include <vector>
 
 #include "neural_network.hh"
 #include "layers/linear_layer.hh"
@@ -19,14 +18,14 @@ int main() {
 	BCECost bce_cost;
 
 	NeuralNetwork nn;
-	nn.addLayer(new LinearLayer("linear_1", Shape(2, 100)));
+	nn.addLayer(new LinearLayer("linear_1", Shape(2, 30)));
 	nn.addLayer(new ReLUActivation("relu_1"));
-	nn.addLayer(new LinearLayer("linear_2", Shape(100, 1)));
+	nn.addLayer(new LinearLayer("linear_2", Shape(30, 1)));
 	nn.addLayer(new SigmoidActivation("sigmoid_output"));
 
 	Matrix Y;
 
-	for (int epoch = 0; epoch < 401; epoch++) {
+	for (int epoch = 0; epoch < 501; epoch++) {
 		float cost = 0.0;
 
 		for (int batch = 0; batch < dataset.getNumOfBatches(); batch++) {

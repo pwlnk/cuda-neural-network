@@ -6,9 +6,9 @@
 #include "linear_layer.hh"
 #include "../nn_utils/nn_exception.hh"
 
-__global__ void weightedSum(float* W, float* A, float* Z,
-							int W_x_dim, int W_y_dim,
-							int A_x_dim, int A_y_dim) {
+__global__ void linearLayerForward( float* W, float* A, float* Z, float* b,
+									int W_x_dim, int W_y_dim,
+									int A_x_dim, int A_y_dim) {
 
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -22,17 +22,7 @@ __global__ void weightedSum(float* W, float* A, float* Z,
 		for (int i = 0; i < W_x_dim; i++) {
 			Z_value += W[row * W_x_dim + i] * A[i * A_x_dim + col];
 		}
-		Z[row * Z_x_dim + col] = Z_value;
-	}
-}
-
-__global__ void addBias(float* Z, float* b, int Z_x_dim, int Z_y_dim) {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (index < Z_x_dim * Z_y_dim) {
-		int row = index / Z_x_dim;
-		int col = index % Z_x_dim;
-		Z[index] += b[row];
+		Z[row * Z_x_dim + col] = Z_value + b[row];
 	}
 }
 
@@ -40,8 +30,8 @@ __global__ void linearLayerBackprop(float* W, float* dZ, float *dA,
 									int W_x_dim, int W_y_dim,
 									int dZ_x_dim, int dZ_y_dim) {
 
-	int row = blockIdx.y * blockDim.y + threadIdx.y;
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
 
 	// W is treated as transposed
 	int dA_x_dim = dZ_x_dim;
@@ -57,13 +47,13 @@ __global__ void linearLayerBackprop(float* W, float* dZ, float *dA,
 	}
 }
 
-__global__ void weightsGDC(float* dZ, float* A, float* W,
-						   int dZ_x_dim, int dZ_y_dim,
-						   int A_x_dim, int A_y_dim,
-						   float learning_rate) {
+__global__ void linearLayerUpdateWeights(  float* dZ, float* A, float* W,
+										   int dZ_x_dim, int dZ_y_dim,
+										   int A_x_dim, int A_y_dim,
+										   float learning_rate) {
 
-	int row = blockIdx.y * blockDim.y + threadIdx.y;
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
 
 	// A is treated as transposed
 	int W_x_dim = A_y_dim;
@@ -71,7 +61,7 @@ __global__ void weightsGDC(float* dZ, float* A, float* W,
 
 	float dW_value = 0.0f;
 
-	if (row < W_y_dim && col < W_y_dim) {
+	if (row < W_y_dim && col < W_x_dim) {
 		for (int i = 0; i < dZ_x_dim; i++) {
 			dW_value += dZ[row * dZ_x_dim + i] * A[col * A_x_dim + i];
 		}
@@ -79,10 +69,10 @@ __global__ void weightsGDC(float* dZ, float* A, float* W,
 	}
 }
 
-__global__ void biasGDC(float* dZ, float* b,
-						int dZ_x_dim, int dZ_y_dim,
-						int b_x_dim,
-						float learning_rate) {
+__global__ void linearLayerUpdateBias(  float* dZ, float* b,
+										int dZ_x_dim, int dZ_y_dim,
+										int b_x_dim,
+										float learning_rate) {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index < dZ_x_dim * dZ_y_dim) {
@@ -102,7 +92,8 @@ LinearLayer::LinearLayer(std::string name, Shape W_shape) :
 	initializeWeightsRandomly();
 }
 
-LinearLayer::~LinearLayer() { }
+LinearLayer::~LinearLayer()
+{ }
 
 void LinearLayer::initializeWeightsRandomly() {
 	std::default_random_engine generator;
@@ -129,67 +120,72 @@ Matrix LinearLayer::forward(Matrix A) {
 	assert(W.shape.x == A.shape.y);
 
 	this->A = A;
-	Z.allocateMemoryIfNotAllocated(Shape(A.shape.x, W.shape.y));
+	Shape Z_shape(A.shape.x, W.shape.y);
+	Z.allocateMemoryIfNotAllocated(Z_shape);
 
-	dim3 block_size(4, 4);
-	dim3 num_of_blocks(	(Z.shape.x + block_size.x - 1) / block_size.x,
-						(Z.shape.y + block_size.y - 1) / block_size.y);
-	weightedSum<<<num_of_blocks, block_size>>>(W.data_device.get(),
-											   A.data_device.get(), Z.data_device.get(),
-											   W.shape.x, W.shape.y,
-											   A.shape.x, A.shape.y);
-	cudaDeviceSynchronize();
-	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
-
-	block_size.x = 256; block_size.y = 1;
-	num_of_blocks.x = (Z.shape.y * Z.shape.x + block_size.x - 1) / block_size.x;
-	num_of_blocks.y = 1;
-	addBias<<<num_of_blocks, block_size>>>(Z.data_device.get(), b.data_device.get(),
-										   Z.shape.x, Z.shape.y);
-	cudaDeviceSynchronize();
-	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+	computeAndStoreLayerOutput(A);
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear layer forward propagation.");
 
 	return Z;
 }
 
-Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
+void LinearLayer::computeAndStoreLayerOutput(Matrix& A) {
+	dim3 block_size(8, 8);
+	dim3 num_of_blocks(	(Z.shape.x + block_size.x - 1) / block_size.x,
+						(Z.shape.y + block_size.y - 1) / block_size.y);
+	linearLayerForward<<<num_of_blocks, block_size>>>( W.data_device.get(),
+													   A.data_device.get(),
+													   Z.data_device.get(),
+													   b.data_device.get(),
+													   W.shape.x, W.shape.y,
+													   A.shape.x, A.shape.y);
+}
 
+Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
 	dA.allocateMemoryIfNotAllocated(A.shape);
 
-	// compute dA
+	computeAndStoreBackpropError(dZ);
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform back propagation.");
+
+	updateBias(dZ, learning_rate);
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform bias update.");
+
+	updateWeights(dZ, learning_rate);
+	NNException::throwIfDeviceErrorsOccurred("Cannot perform weights update.");
+
+	return dA;
+}
+
+void LinearLayer::computeAndStoreBackpropError(Matrix& dZ) {
 	dim3 block_size(8, 8);
 	dim3 num_of_blocks(	(A.shape.x + block_size.x - 1) / block_size.x,
 						(A.shape.y + block_size.y - 1) / block_size.y);
-	linearLayerBackprop<<<num_of_blocks, block_size>>>(W.data_device.get(), dZ.data_device.get(),
+	linearLayerBackprop<<<num_of_blocks, block_size>>>( W.data_device.get(),
+														dZ.data_device.get(),
 														dA.data_device.get(),
 														W.shape.x, W.shape.y,
 														dZ.shape.x, dZ.shape.y);
-	cudaDeviceSynchronize(); // TODO: probably some syncs can be removed
-	NNException::throwIfDeviceErrorsOccurred("Cannot perform linear forward prop.");
+}
 
-	// compute db and do GDC
-	block_size.x = 256; block_size.y = 1;
-	num_of_blocks.x = (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x;
-	num_of_blocks.y = 1;
-	biasGDC<<<num_of_blocks, block_size>>>(dZ.data_device.get(), b.data_device.get(),
-										   dZ.shape.x, dZ.shape.y,
-										   b.shape.x, learning_rate);
-	cudaDeviceSynchronize();
-	NNException::throwIfDeviceErrorsOccurred("Cannot perform bias GDC.");
+void LinearLayer::updateWeights(Matrix& dZ, float learning_rate) {
+	dim3 block_size(8, 8);
+	dim3 num_of_blocks(	(W.shape.x + block_size.x - 1) / block_size.x,
+						(W.shape.y + block_size.y - 1) / block_size.y);
+	linearLayerUpdateWeights<<<num_of_blocks, block_size>>>(dZ.data_device.get(),
+															A.data_device.get(),
+															W.data_device.get(),
+															dZ.shape.x, dZ.shape.y,
+															A.shape.x, A.shape.y,
+															learning_rate);
+}
 
-	// compute dW and do GDC
-	block_size = dim3(16, 16);
-	num_of_blocks = dim3((W.shape.x + block_size.x - 1) / block_size.x,
-						 (W.shape.y + block_size.y - 1) / block_size.y);
-	weightsGDC<<<num_of_blocks, block_size>>>(dZ.data_device.get(), A.data_device.get(),
-											  W.data_device.get(),
-											  dZ.shape.x, dZ.shape.y,
-											  A.shape.x, A.shape.y,
-											  learning_rate);
-	cudaDeviceSynchronize();
-	NNException::throwIfDeviceErrorsOccurred("Cannot perform weights GDC.");
-
-	return dA;
+void LinearLayer::updateBias(Matrix& dZ, float learning_rate) {
+	dim3 block_size(256);
+	dim3 num_of_blocks( (dZ.shape.y * dZ.shape.x + block_size.x - 1) / block_size.x);
+	linearLayerUpdateBias<<<num_of_blocks, block_size>>>(dZ.data_device.get(),
+														 b.data_device.get(),
+														 dZ.shape.x, dZ.shape.y,
+														 b.shape.x, learning_rate);
 }
 
 int LinearLayer::getXDim() const {

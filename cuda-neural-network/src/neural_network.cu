@@ -28,14 +28,14 @@ Matrix NeuralNetwork::forward(Matrix X) {
 }
 
 void NeuralNetwork::backprop(Matrix predictions, Matrix target) {
-
 	dY.allocateMemoryIfNotAllocated(predictions.shape);
-
 	Matrix err = bce_cost.dCost(predictions, target, dY);
 
 	for (std::vector<NNLayer*>::reverse_iterator it = this->layers.rbegin(); it != this->layers.rend(); it++) {
 		err = (*it)->backprop(err, 0.01);
 	}
+
+	cudaDeviceSynchronize();
 }
 
 std::vector<NNLayer*> NeuralNetwork::getLayers() const {

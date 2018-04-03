@@ -1,5 +1,4 @@
 #pragma once
-
 #include "nn_layer.hh"
 
 // for unit testing purposes only
@@ -25,12 +24,10 @@ private:
 	void initializeBiasWithZeros();
 	void initializeWeightsRandomly();
 
-	// for unit testing purposes only
-	friend class LinearLayerTest_ShouldReturnOutputAfterForwardProp_Test;
-	friend class NeuralNetworkTest_ShouldPerformForwardProp_Test;
-	friend class LinearLayerTest_ShouldReturnDerivativeAfterBackprop_Test;
-	friend class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
-	friend class LinearLayerTest_ShouldUptadeItsWeightsDuringBackprop_Test;
+	void computeAndStoreBackpropError(Matrix& dZ);
+	void computeAndStoreLayerOutput(Matrix& A);
+	void updateWeights(Matrix& dZ, float learning_rate);
+	void updateBias(Matrix& dZ, float learning_rate);
 
 public:
 	LinearLayer(std::string name, Shape W_shape);
@@ -41,6 +38,14 @@ public:
 
 	int getXDim() const;
 	int getYDim() const;
+
 	Matrix getWeightsMatrix() const;
 	Matrix getBiasVector() const;
+
+	// for unit testing purposes only
+	friend class LinearLayerTest_ShouldReturnOutputAfterForwardProp_Test;
+	friend class NeuralNetworkTest_ShouldPerformForwardProp_Test;
+	friend class LinearLayerTest_ShouldReturnDerivativeAfterBackprop_Test;
+	friend class LinearLayerTest_ShouldUptadeItsBiasDuringBackprop_Test;
+	friend class LinearLayerTest_ShouldUptadeItsWeightsDuringBackprop_Test;
 };
