@@ -5,8 +5,9 @@
 #include <iostream>
 #include <assert.h>
 
-__global__ void cross_entropy_cost(float* predictions, float* target,
-										   int size, float* cost) {
+__global__ void binaryCrossEntropyCost(float* predictions, float* target,
+									   int size, float* cost) {
+
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index < size) {
@@ -16,8 +17,9 @@ __global__ void cross_entropy_cost(float* predictions, float* target,
 	}
 }
 
-__global__ void d_cross_entropy_cost(float* predictions, float* target, float* dY,
-								     int size) {
+__global__ void dBinaryCrossEntropyCost(float* predictions, float* target, float* dY,
+								     	int size) {
+
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index < size) {
@@ -34,9 +36,9 @@ float BCECost::cost(Matrix predictions, Matrix target) {
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
-	cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device.get(),
-													  target.data_device.get(),
-													  predictions.shape.x, cost);
+	binaryCrossEntropyCost<<<num_of_blocks, block_size>>>(predictions.data_device.get(),
+														  target.data_device.get(),
+														  predictions.shape.x, cost);
 	cudaDeviceSynchronize();
 	NNException::throwIfDeviceErrorsOccurred("Cannot compute binary cross entropy cost.");
 
@@ -51,11 +53,10 @@ Matrix BCECost::dCost(Matrix predictions, Matrix target, Matrix dY) {
 
 	dim3 block_size(256);
 	dim3 num_of_blocks((predictions.shape.x + block_size.x - 1) / block_size.x);
-	d_cross_entropy_cost<<<num_of_blocks, block_size>>>(predictions.data_device.get(),
-														target.data_device.get(),
-														dY.data_device.get(),
-														predictions.shape.x);
-	cudaDeviceSynchronize();
+	dBinaryCrossEntropyCost<<<num_of_blocks, block_size>>>(predictions.data_device.get(),
+														   target.data_device.get(),
+														   dY.data_device.get(),
+														   predictions.shape.x);
 	NNException::throwIfDeviceErrorsOccurred("Cannot compute derivative for binary cross entropy.");
 
 	return dY;
