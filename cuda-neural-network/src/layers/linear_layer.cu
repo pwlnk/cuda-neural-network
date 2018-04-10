@@ -116,7 +116,7 @@ void LinearLayer::initializeBiasWithZeros() {
 	b.copyHostToDevice();
 }
 
-Matrix LinearLayer::forward(Matrix A) {
+Matrix LinearLayer::forward(Matrix& A) {
 	assert(W.shape.x == A.shape.y);
 
 	this->A = A;
@@ -141,7 +141,7 @@ void LinearLayer::computeAndStoreLayerOutput(Matrix& A) {
 													   A.shape.x, A.shape.y);
 }
 
-Matrix LinearLayer::backprop(Matrix dZ, float learning_rate) {
+Matrix LinearLayer::backprop(Matrix& dZ, float learning_rate) {
 	dA.allocateMemoryIfNotAllocated(A.shape);
 
 	computeAndStoreBackpropError(dZ);

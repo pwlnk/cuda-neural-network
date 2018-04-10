@@ -13,6 +13,6 @@ public:
 	ReLUActivation(std::string name);
 	~ReLUActivation();
 
-	Matrix forward(Matrix Z);
-	Matrix backprop(Matrix dA, float learning_rate = 0.01);
+	Matrix forward(Matrix& Z);
+	Matrix backprop(Matrix& dA, float learning_rate = 0.01);
 };
