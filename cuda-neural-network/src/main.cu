@@ -46,8 +46,10 @@ int main() {
 	// compute accuracy
 	Y = nn.forward(dataset.getBatches().at(dataset.getNumOfBatches() - 1));
 	Y.copyDeviceToHost();
-	std::cout 	<< "Accuracy: " << computeAccuracy(Y, dataset.getTargets().at(dataset.getNumOfBatches() - 1))
-				<< std::endl;
+
+	float accuracy = computeAccuracy(
+			Y, dataset.getTargets().at(dataset.getNumOfBatches() - 1));
+	std::cout 	<< "Accuracy: " << accuracy << std::endl;
 
 	return 0;
 }

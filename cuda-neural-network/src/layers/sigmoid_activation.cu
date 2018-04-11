@@ -33,7 +33,7 @@ SigmoidActivation::SigmoidActivation(std::string name) {
 SigmoidActivation::~SigmoidActivation()
 { }
 
-Matrix SigmoidActivation::forward(Matrix& Z) {
+Matrix& SigmoidActivation::forward(Matrix& Z) {
 	this->Z = Z;
 	A.allocateMemoryIfNotAllocated(Z.shape);
 
@@ -47,7 +47,7 @@ Matrix SigmoidActivation::forward(Matrix& Z) {
 	return A;
 }
 
-Matrix SigmoidActivation::backprop(Matrix& dA, float learning_rate) {
+Matrix& SigmoidActivation::backprop(Matrix& dA, float learning_rate) {
 	dZ.allocateMemoryIfNotAllocated(Z.shape);
 
 	dim3 block_size(256);
