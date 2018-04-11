@@ -25,7 +25,7 @@ int main() {
 
 	Matrix Y;
 
-	for (int epoch = 0; epoch < 501; epoch++) {
+	for (int epoch = 0; epoch < 1501; epoch++) {
 		float cost = 0.0;
 
 		for (int batch = 0; batch < dataset.getNumOfBatches(); batch++) {
@@ -35,7 +35,9 @@ int main() {
 		}
 
 		if (epoch % 100 == 0) {
-			std::cout << "epoch: " << epoch << ", cost: " << cost / dataset.getNumOfBatches() << std::endl;
+			std::cout 	<< "epoch: " << epoch
+						<< ", cost: " << cost / dataset.getNumOfBatches()
+						<< std::endl;
 		}
 	}
 
