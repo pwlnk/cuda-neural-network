@@ -5,7 +5,9 @@ It is a simple artificial neural network implementation using CUDA technology. T
 ## Requirements and Technical Info
 
 This repository contains **Eclipse Nsight** project.
+
 To run this project **CUDA Toolkit** is required.
+
 During compilation **C++11** support has to be enabled.
 
 ## Creating a Network
@@ -33,19 +35,19 @@ nn.addLayer(new SigmoidActivation("sigmoid_output"));
 ```cpp
 Matrix Y;
 for (int epoch = 0; epoch < 1001; epoch++) {
-	float cost = 0.0;
+  float cost = 0.0;
 
-	for (int batch = 0; batch < dataset.getNumOfBatches() - 1; batch++) {
-		Y = nn.forward(dataset.getBatches().at(batch));
-		nn.backprop(Y, dataset.getTargets().at(batch));
-		cost += bce_cost.cost(Y, dataset.getTargets().at(batch));
-	}
+  for (int batch = 0; batch < dataset.getNumOfBatches() - 1; batch++) {
+    Y = nn.forward(dataset.getBatches().at(batch));
+    nn.backprop(Y, dataset.getTargets().at(batch));
+    cost += bce_cost.cost(Y, dataset.getTargets().at(batch));
+  }
 
-	if (epoch % 100 == 0) {
-		std::cout 	<< "Epoch: " << epoch
-					<< ", Cost: " << cost / dataset.getNumOfBatches()
-					<< std::endl;
-	}
+  if (epoch % 100 == 0) {
+    std::cout << "Epoch: " << epoch
+              << ", Cost: " << cost / dataset.getNumOfBatches()
+              << std::endl;
+  }
 }
 ```
 
